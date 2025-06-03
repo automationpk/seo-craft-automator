@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +19,7 @@ interface Project {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,12 +61,24 @@ const Dashboard = () => {
   };
 
   const handleCreateProject = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a project",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newProjectName = `SEO Project ${projects.length + 1}`;
     
     try {
       const { data, error } = await supabase
         .from('projects')
-        .insert([{ name: newProjectName }])
+        .insert([{ 
+          name: newProjectName,
+          user_id: user.id
+        }])
         .select()
         .single();
 
