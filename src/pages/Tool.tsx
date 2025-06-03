@@ -10,11 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, FileText, Loader2, Download, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Tool = () => {
   const { id: projectId, toolId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResults, setShowResults] = useState(false);
@@ -39,6 +41,16 @@ const Tool = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to use this tool",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
@@ -59,7 +71,20 @@ const Tool = () => {
       setToolSubmissionId(data.id);
       
       // Simulate processing for now (replace with Make.com webhook later)
-      setTimeout(() => {
+      setTimeout(async () => {
+        // Update the tool submission status to completed
+        const { error: updateError } = await supabase
+          .from('tools_used')
+          .update({ 
+            status: 'completed',
+            output_url: 'https://example.com/generated-article.pdf' // Placeholder URL
+          })
+          .eq('id', data.id);
+
+        if (updateError) {
+          console.error('Error updating tool status:', updateError);
+        }
+
         setIsProcessing(false);
         setShowResults(true);
         toast({
@@ -80,31 +105,56 @@ const Tool = () => {
   };
 
   const handleFeedbackSubmit = async () => {
-    if (feedback.rating > 0 && toolSubmissionId) {
-      try {
-        const { error } = await supabase
-          .from('feedback')
-          .insert([{
-            tool_id: toolSubmissionId,
-            rating: feedback.rating,
-            text_comment: feedback.comment || null
-          }]);
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to submit feedback",
+        variant: "destructive",
+      });
+      return;
+    }
 
-        if (error) throw error;
+    if (feedback.rating === 0) {
+      toast({
+        title: "Error",
+        description: "Please select a rating before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
 
-        toast({
-          title: "Thank you!",
-          description: "Your feedback has been submitted.",
-        });
-        setFeedback({ rating: 0, comment: "" });
-      } catch (error) {
-        console.error('Error submitting feedback:', error);
-        toast({
-          title: "Error",
-          description: "Failed to submit feedback.",
-          variant: "destructive",
-        });
-      }
+    if (!toolSubmissionId) {
+      toast({
+        title: "Error",
+        description: "No tool submission found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .insert([{
+          tool_id: toolSubmissionId,
+          rating: feedback.rating,
+          text_comment: feedback.comment.trim() || null
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Thank you!",
+        description: "Your feedback has been submitted successfully.",
+      });
+      setFeedback({ rating: 0, comment: "" });
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit feedback. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -306,15 +356,15 @@ const Tool = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="mb-2 block">Rating</Label>
+                  <Label className="mb-2 block">Rating *</Label>
                   <div className="flex space-x-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         type="button"
                         onClick={() => setFeedback(prev => ({ ...prev, rating: star }))}
-                        className={`p-1 ${
-                          star <= feedback.rating ? 'text-yellow-400' : 'text-gray-300'
+                        className={`p-1 transition-colors ${
+                          star <= feedback.rating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
                         }`}
                       >
                         <Star className="h-6 w-6 fill-current" />
@@ -331,7 +381,11 @@ const Tool = () => {
                     onChange={(e) => setFeedback(prev => ({ ...prev, comment: e.target.value }))}
                   />
                 </div>
-                <Button onClick={handleFeedbackSubmit} disabled={feedback.rating === 0}>
+                <Button 
+                  onClick={handleFeedbackSubmit} 
+                  disabled={feedback.rating === 0}
+                  className="w-full"
+                >
                   Submit Feedback
                 </Button>
               </CardContent>

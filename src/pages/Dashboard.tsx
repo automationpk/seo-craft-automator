@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import CreateProjectDialog from "@/components/CreateProjectDialog";
 
 interface Project {
   id: string;
@@ -60,49 +62,8 @@ const Dashboard = () => {
     }
   };
 
-  const handleCreateProject = async () => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to create a project",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newProjectName = `SEO Project ${projects.length + 1}`;
-    
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .insert([{ 
-          name: newProjectName,
-          user_id: user.id
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newProject = {
-        ...data,
-        tools_used: 0,
-        status: 'active'
-      };
-
-      setProjects([newProject, ...projects]);
-      toast({
-        title: "Project Created",
-        description: `${newProjectName} has been created successfully.`,
-      });
-    } catch (error) {
-      console.error('Error creating project:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create project",
-        variant: "destructive",
-      });
-    }
+  const handleProjectCreated = (newProject: Project) => {
+    setProjects([newProject, ...projects]);
   };
 
   const handleLogout = async () => {
@@ -212,13 +173,10 @@ const Dashboard = () => {
         {/* Projects Section */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Your Projects</h2>
-          <Button 
-            onClick={handleCreateProject}
+          <CreateProjectDialog 
+            onProjectCreated={handleProjectCreated}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Project
-          </Button>
+          />
         </div>
 
         {projects.length === 0 ? (
@@ -229,13 +187,10 @@ const Dashboard = () => {
               <p className="text-gray-600 mb-6">
                 Create your first SEO project to get started with our automation tools
               </p>
-              <Button 
-                onClick={handleCreateProject}
+              <CreateProjectDialog 
+                onProjectCreated={handleProjectCreated}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Your First Project
-              </Button>
+              />
             </CardContent>
           </Card>
         ) : (
