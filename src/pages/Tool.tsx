@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, FileText, Loader2, Download, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Tool = () => {
   const { id: projectId, toolId } = useParams();
@@ -17,6 +18,7 @@ const Tool = () => {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [toolSubmissionId, setToolSubmissionId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     businessModel: "",
     productService: "",
@@ -39,24 +41,70 @@ const Tool = () => {
     e.preventDefault();
     setIsProcessing(true);
     
-    // Simulate processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      setShowResults(true);
+    try {
+      // Save tool submission to database
+      const { data, error } = await supabase
+        .from('tools_used')
+        .insert([{
+          project_id: projectId,
+          tool_type: toolId,
+          inputs: formData,
+          status: 'processing'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setToolSubmissionId(data.id);
+      
+      // Simulate processing for now (replace with Make.com webhook later)
+      setTimeout(() => {
+        setIsProcessing(false);
+        setShowResults(true);
+        toast({
+          title: "Content Generated!",
+          description: "Your before-after article has been created successfully.",
+        });
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error submitting tool:', error);
       toast({
-        title: "Content Generated!",
-        description: "Your before-after article has been created successfully.",
+        title: "Error",
+        description: "Failed to submit form. Please try again.",
+        variant: "destructive",
       });
-    }, 3000);
+      setIsProcessing(false);
+    }
   };
 
-  const handleFeedbackSubmit = () => {
-    if (feedback.rating > 0) {
-      toast({
-        title: "Thank you!",
-        description: "Your feedback has been submitted.",
-      });
-      setFeedback({ rating: 0, comment: "" });
+  const handleFeedbackSubmit = async () => {
+    if (feedback.rating > 0 && toolSubmissionId) {
+      try {
+        const { error } = await supabase
+          .from('feedback')
+          .insert([{
+            tool_id: toolSubmissionId,
+            rating: feedback.rating,
+            text_comment: feedback.comment || null
+          }]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Thank you!",
+          description: "Your feedback has been submitted.",
+        });
+        setFeedback({ rating: 0, comment: "" });
+      } catch (error) {
+        console.error('Error submitting feedback:', error);
+        toast({
+          title: "Error",
+          description: "Failed to submit feedback.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

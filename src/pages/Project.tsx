@@ -1,22 +1,51 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, FileText, TrendingUp, Search, Shield, Bot, Link, Play } from "lucide-react";
+import { ArrowLeft, FileText, TrendingUp, Search, Shield, Bot, Link, Play, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Project {
+  id: string;
+  name: string;
+  created_at: string;
+}
 
 const Project = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const [project] = useState({
-    id: id,
-    name: id === "1" ? "E-commerce SEO Campaign" : "Blog Content Strategy",
-    created_at: "2024-01-15"
-  });
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProject();
+  }, [id]);
+
+  const fetchProject = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setProject(data);
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load project",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const tools = [
     {
@@ -74,6 +103,30 @@ const Project = () => {
       });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <Card className="text-center p-8">
+          <CardContent>
+            <h2 className="text-xl font-bold mb-4">Project Not Found</h2>
+            <p className="text-gray-600 mb-4">The project you're looking for doesn't exist.</p>
+            <Button onClick={() => navigate('/dashboard')}>
+              Back to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">

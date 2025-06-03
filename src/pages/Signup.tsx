@@ -4,44 +4,59 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, ArrowLeft } from "lucide-react";
+import { Search, ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
     confirmPassword: ""
   });
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
       toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive"
+        title: "Password Mismatch",
+        description: "Passwords do not match. Please try again.",
+        variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
     
-    // Simulate signup
-    setTimeout(() => {
+    const { error } = await signUp(formData.email, formData.password);
+    
+    if (error) {
       toast({
-        title: "Account Created",
-        description: "Welcome to SEO Toolkit! Your account has been created successfully.",
+        title: "Signup Failed",
+        description: error.message,
+        variant: "destructive",
       });
-      navigate("/dashboard");
-      setIsLoading(false);
-    }, 1000);
+    } else {
+      toast({
+        title: "Account Created!",
+        description: "Please check your email to verify your account.",
+      });
+    }
+    
+    setIsLoading(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,25 +91,13 @@ const Signup = () => {
 
         <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-900">Create Your Account</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-900">Create Account</CardTitle>
             <CardDescription className="text-gray-600">
               Join thousands of marketers automating their SEO
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -117,6 +120,7 @@ const Signup = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   required
+                  minLength={6}
                 />
               </div>
               <div className="space-y-2">
@@ -136,7 +140,14 @@ const Signup = () => {
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 disabled={isLoading}
               >
-                {isLoading ? "Creating Account..." : "Create Account"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
               </Button>
             </form>
             

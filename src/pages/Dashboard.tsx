@@ -1,54 +1,115 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, FileText, LogOut, Settings, FolderOpen, Calendar } from "lucide-react";
+import { Plus, Search, FileText, LogOut, Settings, FolderOpen, Calendar, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Project {
+  id: string;
+  name: string;
+  created_at: string;
+  tools_used?: number;
+  status: string;
+}
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      name: "E-commerce SEO Campaign",
-      created_at: "2024-01-15",
-      tools_used: 3,
-      status: "active"
-    },
-    {
-      id: 2,
-      name: "Blog Content Strategy",
-      created_at: "2024-01-10",
-      tools_used: 1,
-      status: "completed"
-    }
-  ]);
+  const { signOut } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCreateProject = () => {
-    const newProject = {
-      id: projects.length + 1,
-      name: `New Project ${projects.length + 1}`,
-      created_at: new Date().toISOString().split('T')[0],
-      tools_used: 0,
-      status: "active"
-    };
-    setProjects([...projects, newProject]);
-    toast({
-      title: "Project Created",
-      description: `${newProject.name} has been created successfully.`,
-    });
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select(`
+          id,
+          name,
+          created_at,
+          tools_used:tools_used(count)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const projectsWithCounts = data?.map(project => ({
+        ...project,
+        tools_used: project.tools_used?.[0]?.count || 0,
+        status: 'active'
+      })) || [];
+
+      setProjects(projectsWithCounts);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load projects",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLogout = () => {
+  const handleCreateProject = async () => {
+    const newProjectName = `SEO Project ${projects.length + 1}`;
+    
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([{ name: newProjectName }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newProject = {
+        ...data,
+        tools_used: 0,
+        status: 'active'
+      };
+
+      setProjects([newProject, ...projects]);
+      toast({
+        title: "Project Created",
+        description: `${newProjectName} has been created successfully.`,
+      });
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create project",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut();
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out.",
     });
     navigate("/");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -113,7 +174,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">
-                {projects.reduce((acc, project) => acc + project.tools_used, 0)}
+                {projects.reduce((acc, project) => acc + (project.tools_used || 0), 0)}
               </div>
               <p className="text-gray-600 text-sm">Total tool executions</p>
             </CardContent>
@@ -128,7 +189,9 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">
-                {projects.filter(p => p.created_at.startsWith('2024-01')).length}
+                {projects.filter(p => 
+                  new Date(p.created_at).getMonth() === new Date().getMonth()
+                ).length}
               </div>
               <p className="text-gray-600 text-sm">Projects created</p>
             </CardContent>

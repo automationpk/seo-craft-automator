@@ -9,7 +9,97 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      feedback: {
+        Row: {
+          id: string
+          rating: number
+          submitted_at: string
+          text_comment: string | null
+          tool_id: string
+        }
+        Insert: {
+          id?: string
+          rating: number
+          submitted_at?: string
+          text_comment?: string | null
+          tool_id: string
+        }
+        Update: {
+          id?: string
+          rating?: number
+          submitted_at?: string
+          text_comment?: string | null
+          tool_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools_used"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tools_used: {
+        Row: {
+          created_at: string
+          id: string
+          inputs: Json
+          output_url: string | null
+          project_id: string
+          status: string
+          tool_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inputs: Json
+          output_url?: string | null
+          project_id: string
+          status?: string
+          tool_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inputs?: Json
+          output_url?: string | null
+          project_id?: string
+          status?: string
+          tool_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tools_used_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
