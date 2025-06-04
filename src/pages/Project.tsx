@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -61,47 +60,40 @@ const Project = () => {
       title: "TOP 10 Article Generator", 
       description: "Create viral listicle articles to boost website traffic",
       icon: <TrendingUp className="h-6 w-6" />,
-      status: "Coming Soon"
+      status: "Available"
     },
     {
       id: "page-optimizer",
       title: "Page Optimizer",
       description: "Optimize landing page titles, headers, and meta descriptions",
       icon: <Search className="h-6 w-6" />,
-      status: "Coming Soon"
+      status: "Available"
     },
     {
       id: "privacy-policy-generator",
       title: "Privacy Policy Generator",
       description: "Generate custom privacy policies for your business",
       icon: <Shield className="h-6 w-6" />,
-      status: "Coming Soon"
+      status: "Available"
     },
     {
       id: "technical-seo-analyzer",
       title: "Technical SEO Analyzer",
       description: "Comprehensive on-site SEO analysis and recommendations",
       icon: <Bot className="h-6 w-6" />,
-      status: "Coming Soon"
+      status: "Available"
     },
     {
       id: "link-building-tracker",
       title: "Link Building Tracker",
       description: "Track and discover new link-building opportunities",
       icon: <Link className="h-6 w-6" />,
-      status: "Coming Soon"
+      status: "Available"
     }
   ];
 
   const handleToolClick = (tool: any) => {
-    if (tool.status === "Available") {
-      navigate(`/project/${id}/tool/${tool.id}`);
-    } else {
-      toast({
-        title: "Coming Soon",
-        description: `${tool.title} will be available soon!`,
-      });
-    }
+    navigate(`/project/${id}/tool/${tool.id}`);
   };
 
   if (loading) {
@@ -143,8 +135,8 @@ const Project = () => {
               Back to Dashboard
             </Button>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">{project.name}</h1>
-              <p className="text-sm text-gray-600">Created on {new Date(project.created_at).toLocaleDateString()}</p>
+              <h1 className="text-xl font-semibold text-gray-900">{project?.name}</h1>
+              <p className="text-sm text-gray-600">Created on {project && new Date(project.created_at).toLocaleDateString()}</p>
             </div>
           </div>
         </div>
@@ -182,10 +174,9 @@ const Project = () => {
                     )}
                   </div>
                   <Badge 
-                    variant={tool.status === "Available" ? "default" : "secondary"}
-                    className={tool.status === "Available" ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}
+                    className="bg-green-100 text-green-800 hover:bg-green-100"
                   >
-                    {tool.status}
+                    Available
                   </Badge>
                 </div>
                 <CardTitle className="text-lg">{tool.title}</CardTitle>
@@ -194,19 +185,9 @@ const Project = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
-                  className="w-full" 
-                  variant={tool.status === "Available" ? "default" : "secondary"}
-                  disabled={tool.status !== "Available"}
-                >
-                  {tool.status === "Available" ? (
-                    <>
-                      <Play className="h-4 w-4 mr-2" />
-                      Use Tool
-                    </>
-                  ) : (
-                    "Coming Soon"
-                  )}
+                <Button className="w-full">
+                  <Play className="h-4 w-4 mr-2" />
+                  Use Tool
                 </Button>
               </CardContent>
             </Card>

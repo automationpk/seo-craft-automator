@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,37 +21,37 @@ const Index = () => {
       title: "TOP 10 Article Generator", 
       description: "Create viral listicle articles to boost website traffic",
       icon: <TrendingUp className="h-6 w-6" />,
-      status: "Coming Soon"
+      status: "Available"
     },
     {
       title: "Page Optimizer",
       description: "Optimize landing page titles, headers, and meta descriptions",
       icon: <Search className="h-6 w-6" />,
-      status: "Coming Soon"
+      status: "Available"
     },
     {
       title: "Privacy Policy Generator",
       description: "Generate custom privacy policies for your business",
       icon: <Shield className="h-6 w-6" />,
-      status: "Coming Soon"
+      status: "Available"
     },
     {
       title: "Technical SEO Analyzer",
       description: "Comprehensive on-site SEO analysis and recommendations",
       icon: <Bot className="h-6 w-6" />,
-      status: "Coming Soon"
+      status: "Available"
     },
     {
       title: "Link Building Tracker",
       description: "Track and discover new link-building opportunities",
       icon: <Link className="h-6 w-6" />,
-      status: "Coming Soon"
+      status: "Available"
     }
   ];
 
   const features = [
     "No-code SEO automation",
-    "Multiple project management",
+    "Multiple project management", 
     "AI-powered content generation",
     "Downloadable results",
     "Technical SEO analysis",
@@ -160,11 +159,8 @@ const Index = () => {
                         </Badge>
                       )}
                     </div>
-                    <Badge 
-                      variant={tool.status === "Available" ? "default" : "secondary"}
-                      className={tool.status === "Available" ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}
-                    >
-                      {tool.status}
+                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                      Available
                     </Badge>
                   </div>
                   <CardTitle className="text-lg">{tool.title}</CardTitle>
@@ -174,12 +170,10 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    className="w-full" 
-                    variant={tool.status === "Available" ? "default" : "secondary"}
-                    disabled={tool.status !== "Available"}
-                    onClick={() => tool.status === "Available" && navigate('/signup')}
+                    className="w-full"
+                    onClick={() => navigate('/signup')}
                   >
-                    {tool.status === "Available" ? "Try Now" : "Coming Soon"}
+                    Try Now
                   </Button>
                 </CardContent>
               </Card>
