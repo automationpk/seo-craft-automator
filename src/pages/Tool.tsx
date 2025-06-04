@@ -29,153 +29,133 @@ const Tool = () => {
   const toolsConfig = {
     "before-after-generator": {
       title: "Before-After Article Generator",
-      description: "Generate engaging before/after comparison articles for your SEO blog",
+      description: "Generate weekly SEO blog content based on product/service",
       icon: <FileText className="h-6 w-6 text-blue-600" />,
       fields: [
-        { id: "businessName", label: "Business Name", type: "input", placeholder: "Enter your business name", required: true },
-        { id: "targetAudience", label: "Target Audience", type: "input", placeholder: "e.g., Small business owners, Marketing agencies", required: true },
-        { id: "problemStatement", label: "Problem Statement", type: "textarea", placeholder: "Describe the main problem your audience faces", required: true },
-        { id: "solution", label: "Your Solution", type: "textarea", placeholder: "How does your product/service solve this problem?", required: true },
-        { id: "specificResults", label: "Specific Results/Benefits", type: "textarea", placeholder: "What specific outcomes can users expect?", required: true },
-        { id: "targetKeywords", label: "Target Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
-        { id: "caseStudyType", label: "Case Study Type", type: "select", options: [
-          { value: "customer-transformation", label: "Customer Transformation" },
-          { value: "business-growth", label: "Business Growth" },
-          { value: "process-improvement", label: "Process Improvement" },
-          { value: "roi-focused", label: "ROI Focused" }
-        ], required: true }
+        { id: "businessModel", label: "Business Model", type: "textarea", placeholder: "Describe your business model", required: true },
+        { id: "productService", label: "Product/Service", type: "textarea", placeholder: "Describe your product or service", required: true },
+        { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
+        { id: "businessType", label: "B2B or B2C", type: "select", options: [
+          { value: "b2b", label: "B2B (Business to Business)" },
+          { value: "b2c", label: "B2C (Business to Consumer)" }
+        ], required: true },
+        { id: "targetedAudience", label: "Targeted Audience", type: "textarea", placeholder: "Describe your target audience in detail", required: true },
+        { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
+        { id: "websiteName", label: "Website Name", type: "input", placeholder: "Your website name", required: true }
       ],
       resultTitle: "Before-After Article Generated Successfully!",
       resultDescription: "Your before-after comparison article is ready for download",
-      resultPreview: "Before vs After: How {businessName} Transformed {targetAudience}"
+      resultPreview: "Before vs After: How {websiteName} Transformed {targetedAudience}"
     },
     "top-10-generator": {
       title: "TOP 10 Article Generator",
-      description: "Create viral listicle articles to boost website traffic",
+      description: "Create listicle articles for increasing website traffic",
       icon: <TrendingUp className="h-6 w-6 text-blue-600" />,
       fields: [
-        { id: "listTopic", label: "List Topic", type: "input", placeholder: "e.g., Best SEO Tools, Top Marketing Strategies", required: true },
-        { id: "industry", label: "Industry/Niche", type: "input", placeholder: "e.g., Digital Marketing, E-commerce", required: true },
-        { id: "targetAudience", label: "Target Audience", type: "input", placeholder: "e.g., Small business owners, Marketing professionals", required: true },
-        { id: "primaryKeyword", label: "Primary Keyword", type: "input", placeholder: "Main keyword to target", required: true },
-        { id: "secondaryKeywords", label: "Secondary Keywords", type: "textarea", placeholder: "Additional keywords (comma-separated)", required: false },
-        { id: "contentDepth", label: "Content Depth", type: "select", options: [
-          { value: "brief", label: "Brief (100-150 words per item)" },
-          { value: "detailed", label: "Detailed (200-300 words per item)" },
-          { value: "comprehensive", label: "Comprehensive (300+ words per item)" }
+        { id: "businessModel", label: "Business Model", type: "textarea", placeholder: "Describe your business model", required: true },
+        { id: "productService", label: "Product/Service", type: "textarea", placeholder: "Describe your product or service", required: true },
+        { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
+        { id: "businessType", label: "B2B or B2C", type: "select", options: [
+          { value: "b2b", label: "B2B (Business to Business)" },
+          { value: "b2c", label: "B2C (Business to Consumer)" }
         ], required: true },
-        { id: "includeComparisons", label: "Include Comparisons", type: "select", options: [
-          { value: "yes", label: "Yes, include comparisons" },
-          { value: "no", label: "No comparisons needed" }
-        ], required: true }
+        { id: "targetedAudience", label: "Targeted Audience", type: "textarea", placeholder: "Describe your target audience in detail", required: true },
+        { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
+        { id: "websiteName", label: "Website Name", type: "input", placeholder: "Your website name", required: true }
       ],
       resultTitle: "TOP 10 Article Generated Successfully!",
-      resultDescription: "Your viral listicle article is ready for download",
-      resultPreview: "TOP 10 {listTopic} for {targetAudience} in {industry}"
+      resultDescription: "Your listicle article is ready for download",
+      resultPreview: "TOP 10 {productService} for {targetedAudience} in {targetedRegion}"
     },
     "page-optimizer": {
-      title: "Page Optimizer",
-      description: "Optimize landing page titles, headers, and meta descriptions",
+      title: "Page on Page Optimizer",
+      description: "Create landing page content like title, headers, and meta",
       icon: <Search className="h-6 w-6 text-blue-600" />,
       fields: [
-        { id: "pageUrl", label: "Page URL", type: "input", placeholder: "https://example.com/page", required: true },
-        { id: "primaryKeyword", label: "Primary Keyword", type: "input", placeholder: "Main keyword to optimize for", required: true },
-        { id: "secondaryKeywords", label: "Secondary Keywords", type: "textarea", placeholder: "Additional keywords (comma-separated)", required: false },
-        { id: "pageType", label: "Page Type", type: "select", options: [
-          { value: "homepage", label: "Homepage" },
-          { value: "product", label: "Product Page" },
-          { value: "service", label: "Service Page" },
-          { value: "blog", label: "Blog Post" },
-          { value: "landing", label: "Landing Page" }
-        ], required: true },
-        { id: "currentTitle", label: "Current Page Title", type: "input", placeholder: "Current title of your page", required: false },
-        { id: "currentMetaDescription", label: "Current Meta Description", type: "textarea", placeholder: "Current meta description", required: false },
-        { id: "targetLocation", label: "Target Location (if local)", type: "input", placeholder: "e.g., New York, London (optional)", required: false }
+        { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
+        { id: "searchVolume", label: "Search Volume", type: "input", placeholder: "Monthly search volume for main keyword", required: true },
+        { id: "userIntentions", label: "User Intentions", type: "textarea", placeholder: "Describe what users are looking for when searching", required: true },
+        { id: "landingPageUrl", label: "Landing Page URL", type: "input", placeholder: "https://example.com/landing-page", required: true }
       ],
       resultTitle: "Page Optimization Complete!",
       resultDescription: "Your optimized page elements are ready",
-      resultPreview: "Optimized SEO elements for {pageUrl} targeting '{primaryKeyword}'"
+      resultPreview: "Optimized content for {landingPageUrl} targeting '{keywords}'"
     },
     "privacy-policy-generator": {
       title: "Privacy Policy Generator",
-      description: "Generate custom privacy policies for your business",
+      description: "Generate custom privacy policy content",
       icon: <Shield className="h-6 w-6 text-blue-600" />,
       fields: [
-        { id: "companyName", label: "Company Name", type: "input", placeholder: "Your company name", required: true },
-        { id: "websiteUrl", label: "Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
-        { id: "contactEmail", label: "Contact Email", type: "input", placeholder: "privacy@yourcompany.com", required: true },
-        { id: "companyAddress", label: "Company Address", type: "textarea", placeholder: "Your company's physical address", required: true },
+        { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
         { id: "businessType", label: "Business Type", type: "select", options: [
           { value: "ecommerce", label: "E-commerce" },
           { value: "saas", label: "SaaS/Software" },
           { value: "blog", label: "Blog/Content Site" },
           { value: "service", label: "Service Business" },
-          { value: "nonprofit", label: "Non-profit" }
+          { value: "nonprofit", label: "Non-profit" },
+          { value: "other", label: "Other" }
         ], required: true },
-        { id: "dataTypes", label: "Types of Data Collected", type: "textarea", placeholder: "e.g., Email addresses, names, payment info, analytics data", required: true },
-        { id: "thirdPartyServices", label: "Third-party Services", type: "textarea", placeholder: "e.g., Google Analytics, Stripe, Mailchimp", required: false },
-        { id: "jurisdiction", label: "Legal Jurisdiction", type: "select", options: [
+        { id: "website", label: "Website", type: "input", placeholder: "https://yourwebsite.com", required: true },
+        { id: "servicesOffered", label: "Services Offered", type: "textarea", placeholder: "Describe the services you offer", required: true },
+        { id: "judiciaryLocation", label: "Judiciary Location", type: "select", options: [
           { value: "us", label: "United States" },
           { value: "eu", label: "European Union (GDPR)" },
           { value: "uk", label: "United Kingdom" },
           { value: "canada", label: "Canada" },
-          { value: "australia", label: "Australia" }
+          { value: "australia", label: "Australia" },
+          { value: "other", label: "Other" }
         ], required: true }
       ],
       resultTitle: "Privacy Policy Generated Successfully!",
       resultDescription: "Your custom privacy policy is ready for download",
-      resultPreview: "Complete privacy policy for {companyName} compliant with {jurisdiction} regulations"
+      resultPreview: "Complete privacy policy for {businessName} compliant with {judiciaryLocation} regulations"
     },
     "technical-seo-analyzer": {
       title: "Technical SEO Analyzer",
-      description: "Comprehensive on-site SEO analysis and recommendations",
+      description: "Analyze on-site SEO factors",
       icon: <Bot className="h-6 w-6 text-blue-600" />,
       fields: [
-        { id: "websiteUrl", label: "Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
-        { id: "primaryKeywords", label: "Primary Keywords", type: "textarea", placeholder: "Main keywords you want to rank for", required: true },
-        { id: "competitorUrls", label: "Competitor URLs", type: "textarea", placeholder: "List competitor websites (one per line)", required: false },
-        { id: "focusPages", label: "Specific Pages to Analyze", type: "textarea", placeholder: "List specific pages to analyze (one per line, optional)", required: false },
-        { id: "analysisDepth", label: "Analysis Depth", type: "select", options: [
-          { value: "basic", label: "Basic (Core technical issues)" },
-          { value: "standard", label: "Standard (Full technical audit)" },
-          { value: "comprehensive", label: "Comprehensive (Technical + Content analysis)" }
-        ], required: true },
-        { id: "includeSpeedAnalysis", label: "Include Speed Analysis", type: "select", options: [
-          { value: "yes", label: "Yes, include page speed analysis" },
-          { value: "no", label: "No, technical SEO only" }
-        ], required: true }
+        { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
+        { id: "businessAddress", label: "Business Address", type: "textarea", placeholder: "Your business address", required: true },
+        { id: "businessPhone", label: "Business Phone Number", type: "input", placeholder: "Your business phone number", required: true },
+        { id: "businessWebsite", label: "Business Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
+        { id: "relevantKeywords", label: "Relevant Keywords", type: "textarea", placeholder: "Keywords relevant to your business", required: true },
+        { id: "otherDomains", label: "Other Domains", type: "textarea", placeholder: "Other domains you own (optional)", required: false },
+        { id: "imageUrl", label: "Image URL", type: "input", placeholder: "URL of your business logo/image (optional)", required: false },
+        { id: "title", label: "Title", type: "input", placeholder: "Current page title", required: false },
+        { id: "description", label: "Description", type: "textarea", placeholder: "Current meta description", required: false },
+        { id: "currentUrl", label: "Current URL", type: "input", placeholder: "Current page URL", required: false },
+        { id: "changeUrl", label: "Change URL", type: "input", placeholder: "New URL if changing (optional)", required: false }
       ],
       resultTitle: "Technical SEO Analysis Complete!",
       resultDescription: "Your comprehensive SEO report is ready",
-      resultPreview: "Technical SEO analysis and recommendations for {websiteUrl}"
+      resultPreview: "Technical SEO analysis and recommendations for {businessName}"
+    },
+    "landing-page-optimizer": {
+      title: "Landing Page Optimization Tool",
+      description: "Optimize SEO for key landing pages",
+      icon: <Search className="h-6 w-6 text-blue-600" />,
+      fields: [
+        { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
+        { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
+        { id: "website", label: "Website", type: "input", placeholder: "https://yourwebsite.com", required: true },
+        { id: "landingPage", label: "Landing Page", type: "input", placeholder: "https://yourwebsite.com/landing-page", required: true },
+        { id: "targetedKeywords", label: "Targeted Keywords", type: "textarea", placeholder: "Keywords to optimize for (comma-separated)", required: true }
+      ],
+      resultTitle: "Landing Page Optimization Complete!",
+      resultDescription: "Your optimized landing page content is ready",
+      resultPreview: "Optimized content for {landingPage} targeting {targetedKeywords}"
     },
     "link-building-tracker": {
       title: "Link Building Tracker",
-      description: "Track and discover new link-building opportunities",
+      description: "Track link-building campaigns",
       icon: <Link className="h-6 w-6 text-blue-600" />,
       fields: [
-        { id: "targetDomain", label: "Target Domain", type: "input", placeholder: "yourwebsite.com", required: true },
-        { id: "industry", label: "Industry/Niche", type: "input", placeholder: "e.g., Digital Marketing, E-commerce", required: true },
-        { id: "targetKeywords", label: "Target Keywords", type: "textarea", placeholder: "Keywords you want to build links for", required: true },
-        { id: "competitorDomains", label: "Competitor Domains", type: "textarea", placeholder: "List competitor domains (one per line)", required: false },
-        { id: "linkTypes", label: "Link Types to Focus On", type: "select", options: [
-          { value: "guest-posts", label: "Guest Posts" },
-          { value: "resource-pages", label: "Resource Pages" },
-          { value: "broken-links", label: "Broken Link Building" },
-          { value: "skyscraper", label: "Skyscraper Technique" },
-          { value: "all", label: "All Types" }
-        ], required: true },
-        { id: "domainAuthority", label: "Minimum Domain Authority", type: "select", options: [
-          { value: "20", label: "20+ (Any quality sites)" },
-          { value: "30", label: "30+ (Good quality sites)" },
-          { value: "40", label: "40+ (High quality sites)" },
-          { value: "50", label: "50+ (Premium sites only)" }
-        ], required: true },
-        { id: "contentTopics", label: "Content Topics", type: "textarea", placeholder: "Topics your business creates content about", required: false }
+        { id: "websiteUrl", label: "Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true }
       ],
       resultTitle: "Link Building Report Generated!",
-      resultDescription: "Your link building opportunities and strategy are ready",
-      resultPreview: "Link building opportunities and tracking setup for {targetDomain} in {industry}"
+      resultDescription: "Your link building opportunities are ready",
+      resultPreview: "Link building opportunities and tracking for {websiteUrl}"
     }
   };
 

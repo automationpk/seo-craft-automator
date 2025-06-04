@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -36,38 +35,44 @@ const Project = () => {
     {
       id: "before-after-generator",
       title: "Before-After Article Generator",
-      description: "Generate engaging before/after comparison articles for your SEO blog",
+      description: "Generate weekly SEO blog content based on product/service",
       icon: <FileText className="h-6 w-6" />,
       popular: true
     },
     {
       id: "top-10-generator", 
       title: "TOP 10 Article Generator", 
-      description: "Create viral listicle articles to boost website traffic",
+      description: "Create listicle articles for increasing website traffic",
       icon: <TrendingUp className="h-6 w-6" />
     },
     {
       id: "page-optimizer",
-      title: "Page Optimizer",
-      description: "Optimize landing page titles, headers, and meta descriptions",
+      title: "Page on Page Optimizer",
+      description: "Create landing page content like title, headers, and meta",
       icon: <Search className="h-6 w-6" />
     },
     {
       id: "privacy-policy-generator",
       title: "Privacy Policy Generator",
-      description: "Generate custom privacy policies for your business",
+      description: "Generate custom privacy policy content",
       icon: <Shield className="h-6 w-6" />
     },
     {
       id: "technical-seo-analyzer",
       title: "Technical SEO Analyzer",
-      description: "Comprehensive on-site SEO analysis and recommendations",
+      description: "Analyze on-site SEO factors",
       icon: <Bot className="h-6 w-6" />
+    },
+    {
+      id: "landing-page-optimizer",
+      title: "Landing Page Optimization Tool",
+      description: "Optimize SEO for key landing pages",
+      icon: <Search className="h-6 w-6" />
     },
     {
       id: "link-building-tracker",
       title: "Link Building Tracker",
-      description: "Track and discover new link-building opportunities",
+      description: "Track link-building campaigns",
       icon: <Link className="h-6 w-6" />
     }
   ];
