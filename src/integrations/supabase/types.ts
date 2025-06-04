@@ -41,6 +41,35 @@ export type Database = {
           },
         ]
       }
+      project_tools: {
+        Row: {
+          id: string
+          project_id: string
+          selected_at: string
+          tool_id: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          selected_at?: string
+          tool_id: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          selected_at?: string
+          tool_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tools_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string
