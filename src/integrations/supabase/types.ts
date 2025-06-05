@@ -41,6 +41,33 @@ export type Database = {
           },
         ]
       }
+      make_webhooks: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          tool_type: string
+          updated_at: string
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          tool_type: string
+          updated_at?: string
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          tool_type?: string
+          updated_at?: string
+          webhook_url?: string
+        }
+        Relationships: []
+      }
       project_tools: {
         Row: {
           id: string
@@ -96,28 +123,37 @@ export type Database = {
           created_at: string
           id: string
           inputs: Json
+          make_scenario_id: string | null
           output_url: string | null
           project_id: string
           status: string
           tool_type: string
+          webhook_response: Json | null
+          webhook_sent_at: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           inputs: Json
+          make_scenario_id?: string | null
           output_url?: string | null
           project_id: string
           status?: string
           tool_type: string
+          webhook_response?: Json | null
+          webhook_sent_at?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           inputs?: Json
+          make_scenario_id?: string | null
           output_url?: string | null
           project_id?: string
           status?: string
           tool_type?: string
+          webhook_response?: Json | null
+          webhook_sent_at?: string | null
         }
         Relationships: [
           {

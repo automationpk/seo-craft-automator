@@ -20,6 +20,7 @@ const Tool = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [toolSubmissionId, setToolSubmissionId] = useState<string | null>(null);
+  const [toolSubmission, setToolSubmission] = useState<any>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState({
     rating: 0,
@@ -171,6 +172,52 @@ const Tool = () => {
     }
   }, [toolId]);
 
+  // Polling function to check tool status
+  useEffect(() => {
+    if (toolSubmissionId && isProcessing) {
+      const interval = setInterval(async () => {
+        try {
+          const { data, error } = await supabase
+            .from('tools_used')
+            .select('*')
+            .eq('id', toolSubmissionId)
+            .single();
+
+          if (error) {
+            console.error('Error checking tool status:', error);
+            return;
+          }
+
+          console.log('Tool status check:', data);
+
+          if (data.status === 'completed' || data.status === 'failed') {
+            setIsProcessing(false);
+            setToolSubmission(data);
+            setShowResults(true);
+            clearInterval(interval);
+
+            if (data.status === 'completed') {
+              toast({
+                title: "Content Generated!",
+                description: `Your ${currentTool.title.toLowerCase()} has been created successfully.`,
+              });
+            } else {
+              toast({
+                title: "Generation Failed",
+                description: "There was an issue generating your content. Please try again.",
+                variant: "destructive",
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error polling tool status:', error);
+        }
+      }, 3000); // Check every 3 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [toolSubmissionId, isProcessing, currentTool]);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -213,6 +260,8 @@ const Tool = () => {
     setIsProcessing(true);
     
     try {
+      console.log('Submitting tool with data:', formData);
+
       // Save tool submission to database
       const { data, error } = await supabase
         .from('tools_used')
@@ -220,7 +269,7 @@ const Tool = () => {
           project_id: projectId,
           tool_type: toolId,
           inputs: formData,
-          status: 'processing'
+          status: 'pending'
         }])
         .select()
         .single();
@@ -228,29 +277,29 @@ const Tool = () => {
       if (error) throw error;
 
       setToolSubmissionId(data.id);
-      
-      // Simulate processing for now (replace with Make.com webhook later)
-      setTimeout(async () => {
-        // Update the tool submission status to completed
-        const { error: updateError } = await supabase
+      console.log('Tool submission created:', data.id);
+
+      // Send to Make.com via edge function
+      const { error: makeError } = await supabase.functions.invoke('send-to-make', {
+        body: { toolSubmissionId: data.id }
+      });
+
+      if (makeError) {
+        console.error('Error sending to Make.com:', makeError);
+        
+        // Update status to failed
+        await supabase
           .from('tools_used')
-          .update({ 
-            status: 'completed',
-            output_url: `https://example.com/generated-${toolId}.pdf` // Placeholder URL
-          })
+          .update({ status: 'failed' })
           .eq('id', data.id);
 
-        if (updateError) {
-          console.error('Error updating tool status:', updateError);
-        }
+        throw new Error('Failed to send data to processing service');
+      }
 
-        setIsProcessing(false);
-        setShowResults(true);
-        toast({
-          title: "Content Generated!",
-          description: `Your ${currentTool.title.toLowerCase()} has been created successfully.`,
-        });
-      }, 3000);
+      toast({
+        title: "Processing Started",
+        description: "Your content is being generated. This may take a few minutes.",
+      });
       
     } catch (error) {
       console.error('Error submitting tool:', error);
@@ -261,6 +310,14 @@ const Tool = () => {
       });
       setIsProcessing(false);
     }
+  };
+
+  const handleDownload = (url: string, format: string) => {
+    window.open(url, '_blank');
+    toast({
+      title: "Download Started",
+      description: `Your ${format} file is being downloaded.`,
+    });
   };
 
   const handleFeedbackSubmit = async () => {
@@ -467,63 +524,90 @@ const Tool = () => {
                     This content has been generated and optimized based on your specifications.
                   </p>
                 </div>
-                <div className="flex gap-4">
-                  <Button className="flex-1">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download (DOC)
-                  </Button>
-                  <Button variant="outline" className="flex-1">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download as PDF
-                  </Button>
-                </div>
+                
+                {toolSubmission?.output_url && (
+                  <div className="flex gap-4">
+                    <Button 
+                      className="flex-1"
+                      onClick={() => handleDownload(toolSubmission.output_url, 'Google Sheet')}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Google Sheet
+                    </Button>
+                  </div>
+                )}
+
+                {!toolSubmission?.output_url && toolSubmission?.status === 'completed' && (
+                  <div className="text-center py-4">
+                    <p className="text-gray-600">Content generated successfully but download link is not yet available.</p>
+                  </div>
+                )}
+
+                {toolSubmission?.status === 'failed' && (
+                  <div className="text-center py-4">
+                    <p className="text-red-600">Content generation failed. Please try again.</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowResults(false);
+                        setToolSubmission(null);
+                        setToolSubmissionId(null);
+                      }}
+                      className="mt-2"
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Feedback Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Rate This Tool</CardTitle>
-                <CardDescription>
-                  Help us improve by sharing your experience
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="mb-2 block">Rating *</Label>
-                  <div className="flex space-x-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setFeedback(prev => ({ ...prev, rating: star }))}
-                        className={`p-1 transition-colors ${
-                          star <= feedback.rating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
-                        }`}
-                      >
-                        <Star className="h-6 w-6 fill-current" />
-                      </button>
-                    ))}
+            {toolSubmission?.status === 'completed' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Rate This Tool</CardTitle>
+                  <CardDescription>
+                    Help us improve by sharing your experience
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="mb-2 block">Rating *</Label>
+                    <div className="flex space-x-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setFeedback(prev => ({ ...prev, rating: star }))}
+                          className={`p-1 transition-colors ${
+                            star <= feedback.rating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
+                          }`}
+                        >
+                          <Star className="h-6 w-6 fill-current" />
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="comment">Comments (Optional)</Label>
-                  <Textarea
-                    id="comment"
-                    placeholder="Share your thoughts about this tool..."
-                    value={feedback.comment}
-                    onChange={(e) => setFeedback(prev => ({ ...prev, comment: e.target.value }))}
-                  />
-                </div>
-                <Button 
-                  onClick={handleFeedbackSubmit} 
-                  disabled={feedback.rating === 0}
-                  className="w-full"
-                >
-                  Submit Feedback
-                </Button>
-              </CardContent>
-            </Card>
+                  <div className="space-y-2">
+                    <Label htmlFor="comment">Comments (Optional)</Label>
+                    <Textarea
+                      id="comment"
+                      placeholder="Share your thoughts about this tool..."
+                      value={feedback.comment}
+                      onChange={(e) => setFeedback(prev => ({ ...prev, comment: e.target.value }))}
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleFeedbackSubmit} 
+                    disabled={feedback.rating === 0}
+                    className="w-full"
+                  >
+                    Submit Feedback
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>
