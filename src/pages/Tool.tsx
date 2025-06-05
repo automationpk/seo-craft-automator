@@ -203,7 +203,6 @@ const Tool = () => {
     }
   };
 
-  // Polling function to check tool status
   useEffect(() => {
     if (toolSubmissionId && isProcessing) {
       const interval = setInterval(async () => {
@@ -243,7 +242,7 @@ const Tool = () => {
         } catch (error) {
           console.error('Error polling tool status:', error);
         }
-      }, 3000); // Check every 3 seconds
+      }, 3000);
 
       return () => clearInterval(interval);
     }
@@ -284,7 +283,6 @@ const Tool = () => {
       return;
     }
 
-    // Validate required fields
     const missingFields = currentTool.fields
       .filter(field => field.required && !formData[field.id]?.trim())
       .map(field => field.label);
@@ -303,7 +301,6 @@ const Tool = () => {
     try {
       console.log('Submitting tool with data:', formData);
 
-      // Save tool submission to database
       const { data, error } = await supabase
         .from('tools_used')
         .insert([{
@@ -320,7 +317,6 @@ const Tool = () => {
       setToolSubmissionId(data.id);
       console.log('Tool submission created:', data.id);
 
-      // Send to Make.com via edge function
       const { error: makeError } = await supabase.functions.invoke('send-to-make', {
         body: { toolSubmissionId: data.id }
       });
@@ -328,7 +324,6 @@ const Tool = () => {
       if (makeError) {
         console.error('Error sending to Make.com:', makeError);
         
-        // Update status to failed
         await supabase
           .from('tools_used')
           .update({ status: 'failed' })
@@ -460,13 +455,16 @@ const Tool = () => {
 
   const deleteSubmission = async (submissionId: string) => {
     try {
-      // Delete feedback first
+      // Delete feedback first (due to foreign key constraints)
       const { error: feedbackError } = await supabase
         .from('feedback')
         .delete()
         .eq('tool_id', submissionId);
       
-      if (feedbackError) throw feedbackError;
+      if (feedbackError) {
+        console.error('Error deleting feedback:', feedbackError);
+        // Continue with deletion even if feedback deletion fails
+      }
 
       // Delete the submission
       const { error: submissionError } = await supabase
@@ -476,7 +474,9 @@ const Tool = () => {
       
       if (submissionError) throw submissionError;
 
-      await fetchPreviousSubmissions();
+      // Update the frontend state immediately
+      setPreviousSubmissions(prev => prev.filter(submission => submission.id !== submissionId));
+      
       toast({
         title: "Submission Deleted",
         description: "The submission has been deleted successfully.",
@@ -748,7 +748,7 @@ const Tool = () => {
                         setShowResults(false);
                         setToolSubmission(null);
                         setToolSubmissionId(null);
-                        fetchPreviousSubmissions(); // Refresh history
+                        fetchPreviousSubmissions();
                       }}
                       className="mt-2"
                     >
