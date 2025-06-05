@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, FileText, Loader2, Download, Star, TrendingUp, Search, Shield, Bot, Link } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Download, Star, TrendingUp, Search, Shield, Bot, Link, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const Tool = () => {
   const { id: projectId, toolId } = useParams();
@@ -26,6 +27,8 @@ const Tool = () => {
     rating: 0,
     comment: ""
   });
+  const [previousSubmissions, setPreviousSubmissions] = useState<any[]>([]);
+  const [expandedHistory, setExpandedHistory] = useState(false);
 
   const toolsConfig = {
     "before-after-generator": {
@@ -170,7 +173,34 @@ const Tool = () => {
       });
       setFormData(initialFormData);
     }
+    fetchPreviousSubmissions();
   }, [toolId]);
+
+  const fetchPreviousSubmissions = async () => {
+    if (!projectId || !toolId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('tools_used')
+        .select(`
+          *,
+          feedback (
+            id,
+            rating,
+            text_comment,
+            submitted_at
+          )
+        `)
+        .eq('project_id', projectId)
+        .eq('tool_type', toolId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPreviousSubmissions(data || []);
+    } catch (error) {
+      console.error('Error fetching previous submissions:', error);
+    }
+  };
 
   // Polling function to check tool status
   useEffect(() => {
@@ -220,6 +250,16 @@ const Tool = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const loadPreviousSubmission = (submission: any) => {
+    if (submission.inputs) {
+      setFormData(submission.inputs);
+      toast({
+        title: "Data Loaded",
+        description: "Previous submission data has been loaded into the form.",
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -459,6 +499,102 @@ const Tool = () => {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Previous Submissions History */}
+        {previousSubmissions.length > 0 && (
+          <Card className="mb-6">
+            <Collapsible open={expandedHistory} onOpenChange={setExpandedHistory}>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-5 w-5 text-blue-600" />
+                      <CardTitle className="text-lg">Previous Submissions ({previousSubmissions.length})</CardTitle>
+                    </div>
+                    {expandedHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </div>
+                  <CardDescription>
+                    View and reuse your previous tool submissions
+                  </CardDescription>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-4">
+                  {previousSubmissions.map((submission) => (
+                    <div key={submission.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-500">
+                            {new Date(submission.created_at).toLocaleDateString()} at {new Date(submission.created_at).toLocaleTimeString()}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            submission.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            submission.status === 'failed' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {submission.status}
+                          </span>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => loadPreviousSubmission(submission)}
+                        >
+                          Load Data
+                        </Button>
+                      </div>
+                      
+                      {/* Show key inputs */}
+                      <div className="grid md:grid-cols-2 gap-2 text-sm">
+                        {Object.entries(submission.inputs || {}).slice(0, 4).map(([key, value]) => (
+                          <div key={key} className="bg-gray-50 p-2 rounded">
+                            <span className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}: </span>
+                            <span className="text-gray-700">{String(value).substring(0, 50)}{String(value).length > 50 ? '...' : ''}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Download link if available */}
+                      {submission.output_url && (
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            size="sm"
+                            onClick={() => handleDownload(submission.output_url, 'Google Sheet')}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download Result
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Show feedback if exists */}
+                      {submission.feedback && submission.feedback.length > 0 && (
+                        <div className="bg-blue-50 p-3 rounded">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="text-sm font-medium">Your Feedback:</span>
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star 
+                                  key={star}
+                                  className={`h-4 w-4 ${
+                                    star <= submission.feedback[0].rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          {submission.feedback[0].text_comment && (
+                            <p className="text-sm text-gray-700">{submission.feedback[0].text_comment}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        )}
+
         {!showResults ? (
           <Card>
             <CardHeader>
@@ -552,6 +688,7 @@ const Tool = () => {
                         setShowResults(false);
                         setToolSubmission(null);
                         setToolSubmissionId(null);
+                        fetchPreviousSubmissions(); // Refresh history
                       }}
                       className="mt-2"
                     >
