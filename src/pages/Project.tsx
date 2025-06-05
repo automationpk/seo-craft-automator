@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, FileText, TrendingUp, Search, Shield, Bot, Link, Play, Loader2, Plus, Settings } from "lucide-react";
+import { ArrowLeft, FileText, TrendingUp, Search, Shield, Bot, Link, Play, Loader2, Plus, Settings, Trash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,6 +31,7 @@ const Project = () => {
   const [loading, setLoading] = useState(true);
   const [showToolSelector, setShowToolSelector] = useState(false);
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const allTools = [
     {
@@ -166,6 +168,54 @@ const Project = () => {
     navigate(`/project/${id}/tool/${tool.id}`);
   };
 
+  const handleDeleteProject = async () => {
+    if (!id) return;
+    
+    setIsDeleting(true);
+    
+    try {
+      // Delete project tools first
+      const { error: toolsError } = await supabase
+        .from('project_tools')
+        .delete()
+        .eq('project_id', id);
+      
+      if (toolsError) throw toolsError;
+
+      // Delete tool submissions
+      const { error: submissionsError } = await supabase
+        .from('tools_used')
+        .delete()
+        .eq('project_id', id);
+      
+      if (submissionsError) throw submissionsError;
+
+      // Delete the project
+      const { error: projectError } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+      
+      if (projectError) throw projectError;
+
+      toast({
+        title: "Project Deleted",
+        description: "Project and all associated data have been deleted successfully.",
+      });
+      
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -214,56 +264,93 @@ const Project = () => {
                 <p className="text-sm text-gray-600">Created on {project && new Date(project.created_at).toLocaleDateString()}</p>
               </div>
             </div>
-            <Dialog open={showToolSelector} onOpenChange={setShowToolSelector}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Manage Tools
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Select Tools for Project</DialogTitle>
-                  <DialogDescription>
-                    Choose which tools you want to use in this project
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid md:grid-cols-2 gap-4 py-4">
-                  {allTools.map((tool) => (
-                    <div key={tool.id} className="flex items-center space-x-3 p-3 border rounded-lg">
-                      <Checkbox
-                        id={tool.id}
-                        checked={selectedTools.includes(tool.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedTools([...selectedTools, tool.id]);
-                          } else {
-                            setSelectedTools(selectedTools.filter(id => id !== tool.id));
-                          }
-                        }}
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          {tool.icon}
-                          <label htmlFor={tool.id} className="text-sm font-medium cursor-pointer">
-                            {tool.title}
-                          </label>
+            <div className="flex items-center space-x-2">
+              <Dialog open={showToolSelector} onOpenChange={setShowToolSelector}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Manage Tools
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Select Tools for Project</DialogTitle>
+                    <DialogDescription>
+                      Choose which tools you want to use in this project
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid md:grid-cols-2 gap-4 py-4">
+                    {allTools.map((tool) => (
+                      <div key={tool.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                        <Checkbox
+                          id={tool.id}
+                          checked={selectedTools.includes(tool.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTools([...selectedTools, tool.id]);
+                            } else {
+                              setSelectedTools(selectedTools.filter(id => id !== tool.id));
+                            }
+                          }}
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            {tool.icon}
+                            <label htmlFor={tool.id} className="text-sm font-medium cursor-pointer">
+                              {tool.title}
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-600">{tool.description}</p>
                         </div>
-                        <p className="text-xs text-gray-600">{tool.description}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowToolSelector(false)}>
-                    Cancel
+                    ))}
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setShowToolSelector(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleToolSelection}>
+                      Update Tools
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash className="h-4 w-4 mr-2" />
+                    Delete Project
                   </Button>
-                  <Button onClick={handleToolSelection}>
-                    Update Tools
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this project? This action cannot be undone. 
+                      All project data, tool submissions, and feedback will be permanently deleted.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDeleteProject}
+                      disabled={isDeleting}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete Project"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
       </header>

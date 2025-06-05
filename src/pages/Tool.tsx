@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, FileText, Loader2, Download, Star, TrendingUp, Search, Shield, Bot, Link, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Download, Star, TrendingUp, Search, Shield, Bot, Link, Clock, ChevronDown, ChevronUp, Trash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 
 const Tool = () => {
   const { id: projectId, toolId } = useParams();
@@ -457,6 +458,39 @@ const Tool = () => {
     }
   };
 
+  const deleteSubmission = async (submissionId: string) => {
+    try {
+      // Delete feedback first
+      const { error: feedbackError } = await supabase
+        .from('feedback')
+        .delete()
+        .eq('tool_id', submissionId);
+      
+      if (feedbackError) throw feedbackError;
+
+      // Delete the submission
+      const { error: submissionError } = await supabase
+        .from('tools_used')
+        .delete()
+        .eq('id', submissionId);
+      
+      if (submissionError) throw submissionError;
+
+      await fetchPreviousSubmissions();
+      toast({
+        title: "Submission Deleted",
+        description: "The submission has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete submission. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!currentTool) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -534,13 +568,39 @@ const Tool = () => {
                             {submission.status}
                           </span>
                         </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => loadPreviousSubmission(submission)}
-                        >
-                          Load Data
-                        </Button>
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => loadPreviousSubmission(submission)}
+                          >
+                            Load Data
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this submission? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => deleteSubmission(submission.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </div>
                       
                       {/* Show key inputs */}
