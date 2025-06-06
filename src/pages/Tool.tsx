@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -178,7 +179,7 @@ const Tool = () => {
   }, [toolId]);
 
   const fetchPreviousSubmissions = async () => {
-    if (!projectId || !toolId) return;
+    if (!projectId || !toolId || !user) return;
 
     try {
       const { data, error } = await supabase
@@ -196,7 +197,12 @@ const Tool = () => {
         .eq('tool_type', toolId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching previous submissions:', error);
+        return;
+      }
+      
+      console.log('Fetched submissions:', data);
       setPreviousSubmissions(data || []);
     } catch (error) {
       console.error('Error fetching previous submissions:', error);
@@ -454,7 +460,18 @@ const Tool = () => {
   };
 
   const deleteSubmission = async (submissionId: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to delete submissions",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      console.log('Attempting to delete submission:', submissionId);
+      
       // Delete feedback first (due to foreign key constraints)
       const { error: feedbackError } = await supabase
         .from('feedback')
@@ -470,12 +487,22 @@ const Tool = () => {
       const { error: submissionError } = await supabase
         .from('tools_used')
         .delete()
-        .eq('id', submissionId);
+        .eq('id', submissionId)
+        .eq('project_id', projectId); // Extra security check
       
-      if (submissionError) throw submissionError;
+      if (submissionError) {
+        console.error('Error deleting submission:', submissionError);
+        throw submissionError;
+      }
+
+      console.log('Successfully deleted submission from database');
 
       // Update the frontend state immediately
-      setPreviousSubmissions(prev => prev.filter(submission => submission.id !== submissionId));
+      setPreviousSubmissions(prev => {
+        const updated = prev.filter(submission => submission.id !== submissionId);
+        console.log('Updated submissions list:', updated);
+        return updated;
+      });
       
       toast({
         title: "Submission Deleted",
@@ -586,7 +613,7 @@ const Tool = () => {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Submission</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to delete this submission? This action cannot be undone.
+                                  Are you sure you want to delete this submission? This action cannot be undone and will also delete any associated feedback.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -628,9 +655,10 @@ const Tool = () => {
 
                       {/* Show feedback if exists */}
                       {submission.feedback && submission.feedback.length > 0 && (
-                        <div className="bg-blue-50 p-3 rounded">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="text-sm font-medium">Your Feedback:</span>
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Star className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800">Previous Feedback:</span>
                             <div className="flex">
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <Star 
@@ -641,10 +669,16 @@ const Tool = () => {
                                 />
                               ))}
                             </div>
+                            <span className="text-sm text-blue-700">({submission.feedback[0].rating}/5)</span>
                           </div>
                           {submission.feedback[0].text_comment && (
-                            <p className="text-sm text-gray-700">{submission.feedback[0].text_comment}</p>
+                            <p className="text-sm text-blue-700 bg-white p-2 rounded border border-blue-200">
+                              "{submission.feedback[0].text_comment}"
+                            </p>
                           )}
+                          <p className="text-xs text-blue-600 mt-1">
+                            Submitted on {new Date(submission.feedback[0].submitted_at).toLocaleDateString()}
+                          </p>
                         </div>
                       )}
                     </div>
