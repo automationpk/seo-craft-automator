@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -103,14 +102,7 @@ const Tool = () => {
         ], required: true },
         { id: "website", label: "Website", type: "input", placeholder: "https://yourwebsite.com", required: true },
         { id: "servicesOffered", label: "Services Offered", type: "textarea", placeholder: "Describe the services you offer", required: true },
-        { id: "judiciaryLocation", label: "Judiciary Location", type: "select", options: [
-          { value: "us", label: "United States" },
-          { value: "eu", label: "European Union (GDPR)" },
-          { value: "uk", label: "United Kingdom" },
-          { value: "canada", label: "Canada" },
-          { value: "australia", label: "Australia" },
-          { value: "other", label: "Other" }
-        ], required: true }
+        { id: "judiciaryLocation", label: "Judiciary Location", type: "input", placeholder: "e.g., United States, European Union, United Kingdom, Canada", required: true }
       ],
       resultTitle: "Privacy Policy Generated Successfully!",
       resultDescription: "Your custom privacy policy is ready for download",
