@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Users, FolderOpen, Wrench, MessageSquare, Trash2, Edit } from 'lucide-react';
+import { LogOut, Users, FolderOpen, Wrench, MessageSquare, Trash2, Plus } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -27,6 +27,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const AdminDashboard = () => {
   const { admin, signOut } = useAdminAuth();
@@ -35,6 +54,17 @@ const AdminDashboard = () => {
   const [toolsUsed, setToolsUsed] = useState([]);
   const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [createDialogOpen, setCreateDialogOpen] = useState('');
+  const [newItem, setNewItem] = useState({
+    projectName: '',
+    projectUserId: '',
+    toolType: '',
+    toolProjectId: '',
+    toolStatus: 'processing',
+    feedbackRating: 1,
+    feedbackComment: '',
+    feedbackToolId: ''
+  });
 
   useEffect(() => {
     fetchAllData();
@@ -73,6 +103,10 @@ const AdminDashboard = () => {
       if (toolsError) throw toolsError;
       if (feedbackError) throw feedbackError;
 
+      console.log('Projects:', projectsData);
+      console.log('Tools Used:', toolsData);
+      console.log('Feedback:', feedbackData);
+
       setProjects(projectsData || []);
       setToolsUsed(toolsData || []);
       setFeedback(feedbackData || []);
@@ -85,6 +119,120 @@ const AdminDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createProject = async () => {
+    try {
+      if (!newItem.projectName || !newItem.projectUserId) {
+        toast({
+          title: 'Error',
+          description: 'Please fill in all required fields',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('projects')
+        .insert([{
+          name: newItem.projectName,
+          user_id: newItem.projectUserId
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Project created successfully',
+      });
+      setCreateDialogOpen('');
+      setNewItem({ ...newItem, projectName: '', projectUserId: '' });
+      fetchAllData();
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create project',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const createTool = async () => {
+    try {
+      if (!newItem.toolType || !newItem.toolProjectId) {
+        toast({
+          title: 'Error',
+          description: 'Please fill in all required fields',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('tools_used')
+        .insert([{
+          tool_type: newItem.toolType,
+          project_id: newItem.toolProjectId,
+          status: newItem.toolStatus,
+          inputs: {}
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Tool record created successfully',
+      });
+      setCreateDialogOpen('');
+      setNewItem({ ...newItem, toolType: '', toolProjectId: '' });
+      fetchAllData();
+    } catch (error) {
+      console.error('Error creating tool:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create tool record',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const createFeedback = async () => {
+    try {
+      if (!newItem.feedbackToolId || !newItem.feedbackRating) {
+        toast({
+          title: 'Error',
+          description: 'Please fill in all required fields',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('feedback')
+        .insert([{
+          tool_id: newItem.feedbackToolId,
+          rating: newItem.feedbackRating,
+          text_comment: newItem.feedbackComment || null
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Feedback created successfully',
+      });
+      setCreateDialogOpen('');
+      setNewItem({ ...newItem, feedbackToolId: '', feedbackComment: '', feedbackRating: 1 });
+      fetchAllData();
+    } catch (error) {
+      console.error('Error creating feedback:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create feedback',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -259,8 +407,50 @@ const AdminDashboard = () => {
           <TabsContent value="projects">
             <Card>
               <CardHeader>
-                <CardTitle>All Projects</CardTitle>
-                <CardDescription>Manage all user projects</CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>All Projects</CardTitle>
+                    <CardDescription>Manage all user projects</CardDescription>
+                  </div>
+                  <Dialog open={createDialogOpen === 'project'} onOpenChange={(open) => setCreateDialogOpen(open ? 'project' : '')}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Project
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Project</DialogTitle>
+                        <DialogDescription>Add a new project to the system</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="projectName">Project Name</Label>
+                          <Input
+                            id="projectName"
+                            value={newItem.projectName}
+                            onChange={(e) => setNewItem({ ...newItem, projectName: e.target.value })}
+                            placeholder="Enter project name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="projectUserId">User ID</Label>
+                          <Input
+                            id="projectUserId"
+                            value={newItem.projectUserId}
+                            onChange={(e) => setNewItem({ ...newItem, projectUserId: e.target.value })}
+                            placeholder="Enter user UUID"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setCreateDialogOpen('')}>Cancel</Button>
+                        <Button onClick={createProject}>Create Project</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -273,36 +463,44 @@ const AdminDashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {projects.map((project: any) => (
-                      <TableRow key={project.id}>
-                        <TableCell className="font-medium">{project.name}</TableCell>
-                        <TableCell>{project.user_id}</TableCell>
-                        <TableCell>{new Date(project.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Project</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete this project? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteProject(project.id)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                    {projects.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-gray-500">
+                          No projects found. Create one using the button above.
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      projects.map((project: any) => (
+                        <TableRow key={project.id}>
+                          <TableCell className="font-medium">{project.name}</TableCell>
+                          <TableCell>{project.user_id}</TableCell>
+                          <TableCell>{new Date(project.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this project? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteProject(project.id)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -312,8 +510,69 @@ const AdminDashboard = () => {
           <TabsContent value="tools">
             <Card>
               <CardHeader>
-                <CardTitle>Tools Used</CardTitle>
-                <CardDescription>All tool usage records</CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Tools Used</CardTitle>
+                    <CardDescription>All tool usage records</CardDescription>
+                  </div>
+                  <Dialog open={createDialogOpen === 'tool'} onOpenChange={(open) => setCreateDialogOpen(open ? 'tool' : '')}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Tool Record
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Tool Record</DialogTitle>
+                        <DialogDescription>Add a new tool usage record</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="toolType">Tool Type</Label>
+                          <Input
+                            id="toolType"
+                            value={newItem.toolType}
+                            onChange={(e) => setNewItem({ ...newItem, toolType: e.target.value })}
+                            placeholder="e.g., keyword_research, competitor_analysis"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="toolProjectId">Project ID</Label>
+                          <Select value={newItem.toolProjectId} onValueChange={(value) => setNewItem({ ...newItem, toolProjectId: value })}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select project" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {projects.map((project: any) => (
+                                <SelectItem key={project.id} value={project.id}>
+                                  {project.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="toolStatus">Status</Label>
+                          <Select value={newItem.toolStatus} onValueChange={(value) => setNewItem({ ...newItem, toolStatus: value })}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="processing">Processing</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="failed">Failed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setCreateDialogOpen('')}>Cancel</Button>
+                        <Button onClick={createTool}>Create Tool Record</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -327,37 +586,45 @@ const AdminDashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {toolsUsed.map((tool: any) => (
-                      <TableRow key={tool.id}>
-                        <TableCell className="font-medium">{tool.tool_type}</TableCell>
-                        <TableCell>{tool.projects?.name || 'Unknown'}</TableCell>
-                        <TableCell>{getStatusBadge(tool.status)}</TableCell>
-                        <TableCell>{new Date(tool.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Tool Record</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete this tool usage record?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteTool(tool.id)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                    {toolsUsed.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-gray-500">
+                          No tool usage records found. Create one using the button above.
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      toolsUsed.map((tool: any) => (
+                        <TableRow key={tool.id}>
+                          <TableCell className="font-medium">{tool.tool_type}</TableCell>
+                          <TableCell>{tool.projects?.name || 'Unknown'}</TableCell>
+                          <TableCell>{getStatusBadge(tool.status)}</TableCell>
+                          <TableCell>{new Date(tool.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Tool Record</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this tool usage record?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteTool(tool.id)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -367,8 +634,71 @@ const AdminDashboard = () => {
           <TabsContent value="feedback">
             <Card>
               <CardHeader>
-                <CardTitle>User Feedback</CardTitle>
-                <CardDescription>All feedback submissions</CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>User Feedback</CardTitle>
+                    <CardDescription>All feedback submissions</CardDescription>
+                  </div>
+                  <Dialog open={createDialogOpen === 'feedback'} onOpenChange={(open) => setCreateDialogOpen(open ? 'feedback' : '')}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Feedback
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Feedback</DialogTitle>
+                        <DialogDescription>Add feedback for a tool</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="feedbackToolId">Tool</Label>
+                          <Select value={newItem.feedbackToolId} onValueChange={(value) => setNewItem({ ...newItem, feedbackToolId: value })}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select tool" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {toolsUsed.map((tool: any) => (
+                                <SelectItem key={tool.id} value={tool.id}>
+                                  {tool.tool_type} - {tool.projects?.name || 'Unknown Project'}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="feedbackRating">Rating</Label>
+                          <Select value={newItem.feedbackRating.toString()} onValueChange={(value) => setNewItem({ ...newItem, feedbackRating: parseInt(value) })}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[1, 2, 3, 4, 5].map(rating => (
+                                <SelectItem key={rating} value={rating.toString()}>
+                                  {rating} Star{rating > 1 ? 's' : ''}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="feedbackComment">Comment (Optional)</Label>
+                          <Textarea
+                            id="feedbackComment"
+                            value={newItem.feedbackComment}
+                            onChange={(e) => setNewItem({ ...newItem, feedbackComment: e.target.value })}
+                            placeholder="Enter feedback comment"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setCreateDialogOpen('')}>Cancel</Button>
+                        <Button onClick={createFeedback}>Create Feedback</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -382,42 +712,50 @@ const AdminDashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {feedback.map((fb: any) => (
-                      <TableRow key={fb.id}>
-                        <TableCell>{fb.tools_used?.tool_type || 'Unknown'}</TableCell>
-                        <TableCell>
-                          <span className="text-yellow-500">{getRatingStars(fb.rating)}</span>
-                          <span className="ml-2">({fb.rating}/5)</span>
-                        </TableCell>
-                        <TableCell className="max-w-xs truncate">
-                          {fb.text_comment || 'No comment'}
-                        </TableCell>
-                        <TableCell>{new Date(fb.submitted_at).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Feedback</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete this feedback?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteFeedback(fb.id)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                    {feedback.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-gray-500">
+                          No feedback found. Create one using the button above.
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      feedback.map((fb: any) => (
+                        <TableRow key={fb.id}>
+                          <TableCell>{fb.tools_used?.tool_type || 'Unknown'}</TableCell>
+                          <TableCell>
+                            <span className="text-yellow-500">{getRatingStars(fb.rating)}</span>
+                            <span className="ml-2">({fb.rating}/5)</span>
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {fb.text_comment || 'No comment'}
+                          </TableCell>
+                          <TableCell>{new Date(fb.submitted_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Feedback</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this feedback?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteFeedback(fb.id)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
