@@ -56,8 +56,8 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const signIn = async (email: string, password: string) => {
     try {
-      // In a real app, you'd use proper password hashing
-      // For demo purposes, we'll use a simple check
+      // For demo purposes, we'll use simple password validation
+      // In production, you'd use proper password hashing with bcrypt
       const { data: adminUser, error } = await supabase
         .from('admin_users')
         .select('*')
@@ -66,7 +66,12 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .single();
 
       if (error || !adminUser) {
-        return { error: { message: 'Invalid credentials' } };
+        return { error: { message: 'Invalid email or password' } };
+      }
+
+      // Simple password validation for demo (in production, use bcrypt)
+      if (password !== 'admin123') {
+        return { error: { message: 'Invalid email or password' } };
       }
 
       // Create session

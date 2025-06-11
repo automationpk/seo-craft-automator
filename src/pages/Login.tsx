@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Search, ArrowLeft, Loader2 } from "lucide-react";
+import { Search, ArrowLeft, Loader2, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -180,7 +180,7 @@ const Login = () => {
               </Button>
             </form>
             
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-4">
               <p className="text-gray-600">
                 Don't have an account?{" "}
                 <button
@@ -190,6 +190,19 @@ const Login = () => {
                   Sign up
                 </button>
               </p>
+              
+              {/* Admin Login Link */}
+              <div className="pt-4 border-t border-gray-200">
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate('/admin/login')}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                  size="sm"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Login
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
