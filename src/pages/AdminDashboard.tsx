@@ -66,27 +66,38 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    fetchAllData();
-  }, []);
+    if (admin) {
+      fetchAllData();
+    }
+  }, [admin]);
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
+      console.log('Admin user:', admin);
       console.log('Fetching all data...');
 
-      // Fetch projects
-      const { data: projectsData, error: projectsError } = await supabase
+      // Create a new supabase client for admin operations
+      const adminClient = supabase;
+
+      // Fetch projects with detailed logging
+      console.log('Fetching projects...');
+      const { data: projectsData, error: projectsError, count: projectsCount } = await adminClient
         .from('projects')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
       if (projectsError) {
         console.error('Projects error:', projectsError);
-        throw projectsError;
+        console.error('Projects error details:', JSON.stringify(projectsError, null, 2));
+      } else {
+        console.log('Projects data:', projectsData);
+        console.log('Projects count:', projectsCount);
       }
 
-      // Fetch tools used
-      const { data: toolsData, error: toolsError } = await supabase
+      // Fetch tools used with detailed logging
+      console.log('Fetching tools used...');
+      const { data: toolsData, error: toolsError, count: toolsCount } = await adminClient
         .from('tools_used')
         .select(`
           *,
@@ -95,16 +106,20 @@ const AdminDashboard = () => {
             name,
             user_id
           )
-        `)
+        `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
       if (toolsError) {
         console.error('Tools error:', toolsError);
-        throw toolsError;
+        console.error('Tools error details:', JSON.stringify(toolsError, null, 2));
+      } else {
+        console.log('Tools data:', toolsData);
+        console.log('Tools count:', toolsCount);
       }
 
-      // Fetch feedback
-      const { data: feedbackData, error: feedbackError } = await supabase
+      // Fetch feedback with detailed logging
+      console.log('Fetching feedback...');
+      const { data: feedbackData, error: feedbackError, count: feedbackCount } = await adminClient
         .from('feedback')
         .select(`
           *,
@@ -118,32 +133,49 @@ const AdminDashboard = () => {
               user_id
             )
           )
-        `)
+        `, { count: 'exact' })
         .order('submitted_at', { ascending: false });
 
       if (feedbackError) {
         console.error('Feedback error:', feedbackError);
-        throw feedbackError;
+        console.error('Feedback error details:', JSON.stringify(feedbackError, null, 2));
+      } else {
+        console.log('Feedback data:', feedbackData);
+        console.log('Feedback count:', feedbackCount);
       }
 
-      console.log('Fetched Projects:', projectsData);
-      console.log('Fetched Tools Used:', toolsData);
-      console.log('Fetched Feedback:', feedbackData);
-
+      // Set data even if there are errors (partial success)
       setProjects(projectsData || []);
       setToolsUsed(toolsData || []);
       setFeedback(feedbackData || []);
 
-      // Log counts for debugging
-      console.log('Projects count:', (projectsData || []).length);
-      console.log('Tools count:', (toolsData || []).length);
-      console.log('Feedback count:', (feedbackData || []).length);
+      // Final logging
+      console.log('Final state - Projects:', (projectsData || []).length);
+      console.log('Final state - Tools:', (toolsData || []).length);
+      console.log('Final state - Feedback:', (feedbackData || []).length);
+
+      // Check for any errors and show toast
+      if (projectsError || toolsError || feedbackError) {
+        const errors = [projectsError, toolsError, feedbackError].filter(Boolean);
+        console.error('Database errors:', errors);
+        toast({
+          title: 'Partial Error',
+          description: `Some data could not be fetched. Check console for details.`,
+          variant: 'destructive',
+        });
+      } else {
+        console.log('All data fetched successfully');
+        toast({
+          title: 'Success',
+          description: 'Dashboard data loaded successfully',
+        });
+      }
 
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Unexpected error fetching data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch dashboard data. Please check console for details.',
+        description: `Failed to fetch dashboard data: ${error.message}`,
         variant: 'destructive',
       });
     } finally {
