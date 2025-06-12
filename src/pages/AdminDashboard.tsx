@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Users, FolderOpen, Wrench, MessageSquare, Trash2, Plus } from 'lucide-react';
+import { LogOut, Users, FolderOpen, Wrench, MessageSquare, Trash2, Plus, RefreshCw } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -74,97 +74,54 @@ const AdminDashboard = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
+      console.log('=== STARTING DATA FETCH ===');
       console.log('Admin user:', admin);
-      console.log('Fetching all data...');
 
-      // Create a new supabase client for admin operations
-      const adminClient = supabase;
-
-      // Fetch projects with detailed logging
+      // Fetch projects with simple query first
       console.log('Fetching projects...');
-      const { data: projectsData, error: projectsError, count: projectsCount } = await adminClient
+      const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
-        .select('*', { count: 'exact' })
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (projectsError) {
-        console.error('Projects error:', projectsError);
-        console.error('Projects error details:', JSON.stringify(projectsError, null, 2));
-      } else {
-        console.log('Projects data:', projectsData);
-        console.log('Projects count:', projectsCount);
-      }
+      console.log('Projects result:', { data: projectsData, error: projectsError });
 
-      // Fetch tools used with detailed logging
+      // Fetch tools used with simple query
       console.log('Fetching tools used...');
-      const { data: toolsData, error: toolsError, count: toolsCount } = await adminClient
+      const { data: toolsData, error: toolsError } = await supabase
         .from('tools_used')
-        .select(`
-          *,
-          projects (
-            id,
-            name,
-            user_id
-          )
-        `, { count: 'exact' })
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (toolsError) {
-        console.error('Tools error:', toolsError);
-        console.error('Tools error details:', JSON.stringify(toolsError, null, 2));
-      } else {
-        console.log('Tools data:', toolsData);
-        console.log('Tools count:', toolsCount);
-      }
+      console.log('Tools result:', { data: toolsData, error: toolsError });
 
-      // Fetch feedback with detailed logging
+      // Fetch feedback with simple query
       console.log('Fetching feedback...');
-      const { data: feedbackData, error: feedbackError, count: feedbackCount } = await adminClient
+      const { data: feedbackData, error: feedbackError } = await supabase
         .from('feedback')
-        .select(`
-          *,
-          tools_used (
-            id,
-            tool_type,
-            project_id,
-            projects (
-              id,
-              name,
-              user_id
-            )
-          )
-        `, { count: 'exact' })
+        .select('*')
         .order('submitted_at', { ascending: false });
 
-      if (feedbackError) {
-        console.error('Feedback error:', feedbackError);
-        console.error('Feedback error details:', JSON.stringify(feedbackError, null, 2));
-      } else {
-        console.log('Feedback data:', feedbackData);
-        console.log('Feedback count:', feedbackCount);
-      }
+      console.log('Feedback result:', { data: feedbackData, error: feedbackError });
 
-      // Set data even if there are errors (partial success)
+      // Set data regardless of errors
       setProjects(projectsData || []);
       setToolsUsed(toolsData || []);
       setFeedback(feedbackData || []);
 
-      // Final logging
-      console.log('Final state - Projects:', (projectsData || []).length);
-      console.log('Final state - Tools:', (toolsData || []).length);
-      console.log('Final state - Feedback:', (feedbackData || []).length);
+      console.log('=== FINAL COUNTS ===');
+      console.log('Projects:', (projectsData || []).length);
+      console.log('Tools:', (toolsData || []).length);
+      console.log('Feedback:', (feedbackData || []).length);
 
-      // Check for any errors and show toast
       if (projectsError || toolsError || feedbackError) {
-        const errors = [projectsError, toolsError, feedbackError].filter(Boolean);
-        console.error('Database errors:', errors);
+        console.error('Errors occurred:', { projectsError, toolsError, feedbackError });
         toast({
           title: 'Partial Error',
-          description: `Some data could not be fetched. Check console for details.`,
+          description: 'Some data could not be fetched. Check console for details.',
           variant: 'destructive',
         });
       } else {
-        console.log('All data fetched successfully');
         toast({
           title: 'Success',
           description: 'Dashboard data loaded successfully',
@@ -172,14 +129,89 @@ const AdminDashboard = () => {
       }
 
     } catch (error) {
-      console.error('Unexpected error fetching data:', error);
+      console.error('Unexpected error:', error);
       toast({
         title: 'Error',
-        description: `Failed to fetch dashboard data: ${error.message}`,
+        description: `Failed to fetch data: ${error.message}`,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createTestData = async () => {
+    try {
+      console.log('Creating test data...');
+      
+      // Create a test project
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .insert([{
+          name: 'Test Project ' + Date.now(),
+          user_id: 'test-user-' + Date.now()
+        }])
+        .select()
+        .single();
+
+      if (projectError) {
+        console.error('Project creation error:', projectError);
+        throw projectError;
+      }
+
+      console.log('Created project:', projectData);
+
+      // Create a test tool
+      const { data: toolData, error: toolError } = await supabase
+        .from('tools_used')
+        .insert([{
+          tool_type: 'test_tool',
+          project_id: projectData.id,
+          status: 'completed',
+          inputs: { test: 'data' }
+        }])
+        .select()
+        .single();
+
+      if (toolError) {
+        console.error('Tool creation error:', toolError);
+        throw toolError;
+      }
+
+      console.log('Created tool:', toolData);
+
+      // Create test feedback
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from('feedback')
+        .insert([{
+          tool_id: toolData.id,
+          rating: 5,
+          text_comment: 'Test feedback'
+        }])
+        .select()
+        .single();
+
+      if (feedbackError) {
+        console.error('Feedback creation error:', feedbackError);
+        throw feedbackError;
+      }
+
+      console.log('Created feedback:', feedbackData);
+
+      toast({
+        title: 'Success',
+        description: 'Test data created successfully',
+      });
+
+      // Refresh data
+      fetchAllData();
+    } catch (error) {
+      console.error('Error creating test data:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to create test data: ${error.message}`,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -194,8 +226,6 @@ const AdminDashboard = () => {
         return;
       }
 
-      console.log('Creating project:', { name: newItem.projectName, user_id: newItem.projectUserId });
-
       const { data, error } = await supabase
         .from('projects')
         .insert([{
@@ -204,12 +234,7 @@ const AdminDashboard = () => {
         }])
         .select();
 
-      if (error) {
-        console.error('Create project error:', error);
-        throw error;
-      }
-
-      console.log('Project created:', data);
+      if (error) throw error;
 
       toast({
         title: 'Success',
@@ -239,12 +264,6 @@ const AdminDashboard = () => {
         return;
       }
 
-      console.log('Creating tool:', {
-        tool_type: newItem.toolType,
-        project_id: newItem.toolProjectId,
-        status: newItem.toolStatus
-      });
-
       const { data, error } = await supabase
         .from('tools_used')
         .insert([{
@@ -255,12 +274,7 @@ const AdminDashboard = () => {
         }])
         .select();
 
-      if (error) {
-        console.error('Create tool error:', error);
-        throw error;
-      }
-
-      console.log('Tool created:', data);
+      if (error) throw error;
 
       toast({
         title: 'Success',
@@ -290,12 +304,6 @@ const AdminDashboard = () => {
         return;
       }
 
-      console.log('Creating feedback:', {
-        tool_id: newItem.feedbackToolId,
-        rating: newItem.feedbackRating,
-        text_comment: newItem.feedbackComment || null
-      });
-
       const { data, error } = await supabase
         .from('feedback')
         .insert([{
@@ -305,12 +313,7 @@ const AdminDashboard = () => {
         }])
         .select();
 
-      if (error) {
-        console.error('Create feedback error:', error);
-        throw error;
-      }
-
-      console.log('Feedback created:', data);
+      if (error) throw error;
 
       toast({
         title: 'Success',
@@ -331,7 +334,6 @@ const AdminDashboard = () => {
 
   const deleteProject = async (projectId: string) => {
     try {
-      console.log('Deleting project:', projectId);
       const { error } = await supabase
         .from('projects')
         .delete()
@@ -356,7 +358,6 @@ const AdminDashboard = () => {
 
   const deleteTool = async (toolId: string) => {
     try {
-      console.log('Deleting tool:', toolId);
       const { error } = await supabase
         .from('tools_used')
         .delete()
@@ -381,7 +382,6 @@ const AdminDashboard = () => {
 
   const deleteFeedback = async (feedbackId: string) => {
     try {
-      console.log('Deleting feedback:', feedbackId);
       const { error } = await supabase
         .from('feedback')
         .delete()
@@ -441,11 +441,51 @@ const AdminDashboard = () => {
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600">Welcome back, {admin?.full_name}</p>
           </div>
-          <Button onClick={signOut} variant="outline">
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={createTestData} variant="outline">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Test Data
+            </Button>
+            <Button onClick={fetchAllData} variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button onClick={signOut} variant="outline">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
+
+        {/* Debug Info */}
+        <Card className="mb-8 border-yellow-200 bg-yellow-50">
+          <CardHeader>
+            <CardTitle className="text-yellow-800">Debug Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <strong>Projects in state:</strong> {projects.length}
+                <br />
+                <strong>Raw data:</strong> {JSON.stringify(projects.slice(0, 1), null, 2)}
+              </div>
+              <div>
+                <strong>Tools in state:</strong> {toolsUsed.length}
+                <br />
+                <strong>Raw data:</strong> {JSON.stringify(toolsUsed.slice(0, 1), null, 2)}
+              </div>
+              <div>
+                <strong>Feedback in state:</strong> {feedback.length}
+                <br />
+                <strong>Raw data:</strong> {JSON.stringify(feedback.slice(0, 1), null, 2)}
+              </div>
+            </div>
+            <p className="mt-4 text-yellow-700">
+              If all counts are 0 and you see empty arrays above, the database tables are empty. 
+              Click "Create Test Data" to add sample data for testing.
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -574,7 +614,7 @@ const AdminDashboard = () => {
                     {projects.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center text-gray-500 py-8">
-                          No projects found. Create one using the button above.
+                          No projects found. Click "Create Test Data" or "Create Project" to add data.
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -687,7 +727,7 @@ const AdminDashboard = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Tool Type</TableHead>
-                      <TableHead>Project</TableHead>
+                      <TableHead>Project ID</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Created At</TableHead>
                       <TableHead>Actions</TableHead>
@@ -697,14 +737,14 @@ const AdminDashboard = () => {
                     {toolsUsed.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center text-gray-500 py-8">
-                          No tool usage records found. Create one using the button above.
+                          No tool usage records found. Click "Create Test Data" or "Create Tool Record" to add data.
                         </TableCell>
                       </TableRow>
                     ) : (
                       toolsUsed.map((tool: any) => (
                         <TableRow key={tool.id}>
                           <TableCell className="font-medium">{tool.tool_type}</TableCell>
-                          <TableCell>{tool.projects?.name || 'Unknown'}</TableCell>
+                          <TableCell className="font-mono text-sm">{tool.project_id}</TableCell>
                           <TableCell>{getStatusBadge(tool.status)}</TableCell>
                           <TableCell>{new Date(tool.created_at).toLocaleDateString()}</TableCell>
                           <TableCell>
@@ -769,7 +809,7 @@ const AdminDashboard = () => {
                             <SelectContent>
                               {toolsUsed.map((tool: any) => (
                                 <SelectItem key={tool.id} value={tool.id}>
-                                  {tool.tool_type} - {tool.projects?.name || 'Unknown Project'}
+                                  {tool.tool_type} - {tool.project_id}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -812,7 +852,7 @@ const AdminDashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Tool Type</TableHead>
+                      <TableHead>Tool ID</TableHead>
                       <TableHead>Rating</TableHead>
                       <TableHead>Comment</TableHead>
                       <TableHead>Submitted At</TableHead>
@@ -823,13 +863,13 @@ const AdminDashboard = () => {
                     {feedback.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center text-gray-500 py-8">
-                          No feedback found. Create one using the button above.
+                          No feedback found. Click "Create Test Data" or "Create Feedback" to add data.
                         </TableCell>
                       </TableRow>
                     ) : (
                       feedback.map((fb: any) => (
                         <TableRow key={fb.id}>
-                          <TableCell>{fb.tools_used?.tool_type || 'Unknown'}</TableCell>
+                          <TableCell className="font-mono text-sm">{fb.tool_id}</TableCell>
                           <TableCell>
                             <span className="text-yellow-500">{getRatingStars(fb.rating)}</span>
                             <span className="ml-2">({fb.rating}/5)</span>
