@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,49 +71,79 @@ const AdminDashboard = () => {
 
   const fetchAllData = async () => {
     try {
-      // Fetch projects with user count
+      setLoading(true);
+      console.log('Fetching all data...');
+
+      // Fetch projects
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Fetch tools used with project info
+      if (projectsError) {
+        console.error('Projects error:', projectsError);
+        throw projectsError;
+      }
+
+      // Fetch tools used
       const { data: toolsData, error: toolsError } = await supabase
         .from('tools_used')
         .select(`
           *,
-          projects (name, user_id)
+          projects (
+            id,
+            name,
+            user_id
+          )
         `)
         .order('created_at', { ascending: false });
 
-      // Fetch feedback with tool and project info
+      if (toolsError) {
+        console.error('Tools error:', toolsError);
+        throw toolsError;
+      }
+
+      // Fetch feedback
       const { data: feedbackData, error: feedbackError } = await supabase
         .from('feedback')
         .select(`
           *,
           tools_used (
+            id,
             tool_type,
-            projects (name, user_id)
+            project_id,
+            projects (
+              id,
+              name,
+              user_id
+            )
           )
         `)
         .order('submitted_at', { ascending: false });
 
-      if (projectsError) throw projectsError;
-      if (toolsError) throw toolsError;
-      if (feedbackError) throw feedbackError;
+      if (feedbackError) {
+        console.error('Feedback error:', feedbackError);
+        throw feedbackError;
+      }
 
-      console.log('Projects:', projectsData);
-      console.log('Tools Used:', toolsData);
-      console.log('Feedback:', feedbackData);
+      console.log('Fetched Projects:', projectsData);
+      console.log('Fetched Tools Used:', toolsData);
+      console.log('Fetched Feedback:', feedbackData);
 
       setProjects(projectsData || []);
       setToolsUsed(toolsData || []);
       setFeedback(feedbackData || []);
+
+      // Log counts for debugging
+      console.log('Projects count:', (projectsData || []).length);
+      console.log('Tools count:', (toolsData || []).length);
+      console.log('Feedback count:', (feedbackData || []).length);
+
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch dashboard data',
+        description: 'Failed to fetch dashboard data. Please check console for details.',
         variant: 'destructive',
       });
     } finally {
@@ -133,14 +162,22 @@ const AdminDashboard = () => {
         return;
       }
 
-      const { error } = await supabase
+      console.log('Creating project:', { name: newItem.projectName, user_id: newItem.projectUserId });
+
+      const { data, error } = await supabase
         .from('projects')
         .insert([{
           name: newItem.projectName,
           user_id: newItem.projectUserId
-        }]);
+        }])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Create project error:', error);
+        throw error;
+      }
+
+      console.log('Project created:', data);
 
       toast({
         title: 'Success',
@@ -153,7 +190,7 @@ const AdminDashboard = () => {
       console.error('Error creating project:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create project',
+        description: `Failed to create project: ${error.message}`,
         variant: 'destructive',
       });
     }
@@ -170,29 +207,41 @@ const AdminDashboard = () => {
         return;
       }
 
-      const { error } = await supabase
+      console.log('Creating tool:', {
+        tool_type: newItem.toolType,
+        project_id: newItem.toolProjectId,
+        status: newItem.toolStatus
+      });
+
+      const { data, error } = await supabase
         .from('tools_used')
         .insert([{
           tool_type: newItem.toolType,
           project_id: newItem.toolProjectId,
           status: newItem.toolStatus,
           inputs: {}
-        }]);
+        }])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Create tool error:', error);
+        throw error;
+      }
+
+      console.log('Tool created:', data);
 
       toast({
         title: 'Success',
         description: 'Tool record created successfully',
       });
       setCreateDialogOpen('');
-      setNewItem({ ...newItem, toolType: '', toolProjectId: '' });
+      setNewItem({ ...newItem, toolType: '', toolProjectId: '', toolStatus: 'processing' });
       fetchAllData();
     } catch (error) {
       console.error('Error creating tool:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create tool record',
+        description: `Failed to create tool record: ${error.message}`,
         variant: 'destructive',
       });
     }
@@ -209,15 +258,27 @@ const AdminDashboard = () => {
         return;
       }
 
-      const { error } = await supabase
+      console.log('Creating feedback:', {
+        tool_id: newItem.feedbackToolId,
+        rating: newItem.feedbackRating,
+        text_comment: newItem.feedbackComment || null
+      });
+
+      const { data, error } = await supabase
         .from('feedback')
         .insert([{
           tool_id: newItem.feedbackToolId,
           rating: newItem.feedbackRating,
           text_comment: newItem.feedbackComment || null
-        }]);
+        }])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Create feedback error:', error);
+        throw error;
+      }
+
+      console.log('Feedback created:', data);
 
       toast({
         title: 'Success',
@@ -230,7 +291,7 @@ const AdminDashboard = () => {
       console.error('Error creating feedback:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create feedback',
+        description: `Failed to create feedback: ${error.message}`,
         variant: 'destructive',
       });
     }
@@ -238,6 +299,7 @@ const AdminDashboard = () => {
 
   const deleteProject = async (projectId: string) => {
     try {
+      console.log('Deleting project:', projectId);
       const { error } = await supabase
         .from('projects')
         .delete()
@@ -262,6 +324,7 @@ const AdminDashboard = () => {
 
   const deleteTool = async (toolId: string) => {
     try {
+      console.log('Deleting tool:', toolId);
       const { error } = await supabase
         .from('tools_used')
         .delete()
@@ -286,6 +349,7 @@ const AdminDashboard = () => {
 
   const deleteFeedback = async (feedbackId: string) => {
     try {
+      console.log('Deleting feedback:', feedbackId);
       const { error } = await supabase
         .from('feedback')
         .delete()
@@ -360,6 +424,9 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{projects.length}</div>
+              <p className="text-xs text-muted-foreground">
+                Active projects in system
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -369,6 +436,9 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{toolsUsed.length}</div>
+              <p className="text-xs text-muted-foreground">
+                Total tool executions
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -378,6 +448,9 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{feedback.length}</div>
+              <p className="text-xs text-muted-foreground">
+                User feedback entries
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -392,6 +465,9 @@ const AdminDashboard = () => {
                   : '0'
                 }
               </div>
+              <p className="text-xs text-muted-foreground">
+                Average user rating
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -440,7 +516,7 @@ const AdminDashboard = () => {
                             id="projectUserId"
                             value={newItem.projectUserId}
                             onChange={(e) => setNewItem({ ...newItem, projectUserId: e.target.value })}
-                            placeholder="Enter user UUID"
+                            placeholder="Enter user UUID (e.g., demo-user-123)"
                           />
                         </div>
                       </div>
@@ -465,7 +541,7 @@ const AdminDashboard = () => {
                   <TableBody>
                     {projects.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-gray-500">
+                        <TableCell colSpan={4} className="text-center text-gray-500 py-8">
                           No projects found. Create one using the button above.
                         </TableCell>
                       </TableRow>
@@ -473,7 +549,7 @@ const AdminDashboard = () => {
                       projects.map((project: any) => (
                         <TableRow key={project.id}>
                           <TableCell className="font-medium">{project.name}</TableCell>
-                          <TableCell>{project.user_id}</TableCell>
+                          <TableCell className="font-mono text-sm">{project.user_id}</TableCell>
                           <TableCell>{new Date(project.created_at).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <AlertDialog>
@@ -538,7 +614,7 @@ const AdminDashboard = () => {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="toolProjectId">Project ID</Label>
+                          <Label htmlFor="toolProjectId">Project</Label>
                           <Select value={newItem.toolProjectId} onValueChange={(value) => setNewItem({ ...newItem, toolProjectId: value })}>
                             <SelectTrigger>
                               <SelectValue placeholder="Select project" />
@@ -588,7 +664,7 @@ const AdminDashboard = () => {
                   <TableBody>
                     {toolsUsed.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-gray-500">
+                        <TableCell colSpan={5} className="text-center text-gray-500 py-8">
                           No tool usage records found. Create one using the button above.
                         </TableCell>
                       </TableRow>
@@ -714,7 +790,7 @@ const AdminDashboard = () => {
                   <TableBody>
                     {feedback.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-gray-500">
+                        <TableCell colSpan={5} className="text-center text-gray-500 py-8">
                           No feedback found. Create one using the button above.
                         </TableCell>
                       </TableRow>
