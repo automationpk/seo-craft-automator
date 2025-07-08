@@ -149,11 +149,16 @@ const Tool = () => {
       description: "Track link-building campaigns",
       icon: <Link className="h-6 w-6 text-blue-600" />,
       fields: [
-        { id: "websiteUrl", label: "Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true }
+        { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
+        { id: "targetedLocation", label: "Targeted Location", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
+        { id: "websiteUrl", label: "Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
+        { id: "category", label: "Category", type: "input", placeholder: "Your business category", required: true },
+        { id: "goal", label: "Goal", type: "textarea", placeholder: "Describe your link building goals", required: true },
+        { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true }
       ],
       resultTitle: "Link Building Report Generated!",
       resultDescription: "Your link building opportunities are ready",
-      resultPreview: "Link building opportunities and tracking for {websiteUrl}"
+      resultPreview: "Link building opportunities and tracking for {businessName} in {targetedLocation}"
     }
   };
 
