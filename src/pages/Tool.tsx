@@ -80,11 +80,12 @@ const Tool = () => {
         { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
         { id: "searchVolume", label: "Search Volume", type: "input", placeholder: "Monthly search volume for main keyword", required: true },
         { id: "userIntentions", label: "User Intentions", type: "textarea", placeholder: "Describe what users are looking for when searching", required: true },
-        { id: "landingPageUrl", label: "Landing Page URL", type: "input", placeholder: "https://example.com/landing-page", required: true }
+        { id: "landingPageUrl", label: "Landing Page URL", type: "input", placeholder: "https://example.com/landing-page", required: true },
+        { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true }
       ],
       resultTitle: "Page Optimization Complete!",
       resultDescription: "Your optimized page elements are ready",
-      resultPreview: "Optimized content for {landingPageUrl} targeting '{keywords}'"
+      resultPreview: "Optimized content for {landingPageUrl} targeting '{keywords}' in {targetedRegion}"
     },
     "privacy-policy-generator": {
       title: "Privacy Policy Generator",
