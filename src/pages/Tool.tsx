@@ -103,7 +103,7 @@ const Tool = () => {
         ], required: true },
         { id: "website", label: "Website", type: "input", placeholder: "https://yourwebsite.com", required: true },
         { id: "servicesOffered", label: "Services Offered", type: "textarea", placeholder: "Describe the services you offer", required: true },
-        { id: "judiciaryLocation", label: "Judiciary Location", type: "input", placeholder: "e.g., United States, European Union, United Kingdom, Canada", required: true }
+        { id: "judiciaryLocation", label: "Targeted Region", type: "input", placeholder: "e.g., United States, European Union, United Kingdom, Canada", required: true }
       ],
       resultTitle: "Privacy Policy Generated Successfully!",
       resultDescription: "Your custom privacy policy is ready for download",
@@ -118,6 +118,7 @@ const Tool = () => {
         { id: "businessAddress", label: "Business Address", type: "textarea", placeholder: "Your business address", required: true },
         { id: "businessPhone", label: "Business Phone Number", type: "input", placeholder: "Your business phone number", required: true },
         { id: "businessWebsite", label: "Business Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
+        { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
         { id: "relevantKeywords", label: "Relevant Keywords", type: "textarea", placeholder: "Keywords relevant to your business", required: true },
         { id: "otherDomains", label: "Other Domains", type: "textarea", placeholder: "Other domains you own (optional)", required: false },
         { id: "imageUrl", label: "Image URL", type: "input", placeholder: "URL of your business logo/image (optional)", required: false },
@@ -128,7 +129,7 @@ const Tool = () => {
       ],
       resultTitle: "Technical SEO Analysis Complete!",
       resultDescription: "Your comprehensive SEO report is ready",
-      resultPreview: "Technical SEO analysis and recommendations for {businessName}"
+      resultPreview: "Technical SEO analysis and recommendations for {businessName} in {targetedRegion}"
     },
     "landing-page-optimizer": {
       title: "Landing Page Optimization Tool",
@@ -151,7 +152,7 @@ const Tool = () => {
       icon: <Link className="h-6 w-6 text-blue-600" />,
       fields: [
         { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
-        { id: "targetedLocation", label: "Targeted Location", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
+        { id: "targetedLocation", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
         { id: "websiteUrl", label: "Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
         { id: "category", label: "Category", type: "input", placeholder: "Your business category", required: true },
         { id: "goal", label: "Goal", type: "textarea", placeholder: "Describe your link building goals", required: true },
