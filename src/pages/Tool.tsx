@@ -10,6 +10,7 @@ import { ArrowLeft, FileText, Loader2, Download, Star, TrendingUp, Search, Shiel
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProject } from "@/contexts/ProjectContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 
@@ -18,6 +19,7 @@ const Tool = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { setProjectId, targetedRegion, setTargetedRegion } = useProject();
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResults, setShowResults] = useState(false);
@@ -167,15 +169,36 @@ const Tool = () => {
   const currentTool = toolsConfig[toolId as keyof typeof toolsConfig];
 
   useEffect(() => {
+    // Set project context when component mounts
+    if (projectId) {
+      setProjectId(projectId);
+    }
+  }, [projectId, setProjectId]);
+
+  useEffect(() => {
     if (currentTool) {
       const initialFormData: Record<string, string> = {};
       currentTool.fields.forEach(field => {
         initialFormData[field.id] = "";
       });
+      
+      // Auto-populate targeted region fields if available
+      if (targetedRegion) {
+        const targetedRegionFields = currentTool.fields.filter(field => 
+          field.id.includes('targetedRegion') || 
+          field.id.includes('judiciaryLocation') || 
+          field.id.includes('targetedLocation')
+        );
+        
+        targetedRegionFields.forEach(field => {
+          initialFormData[field.id] = targetedRegion;
+        });
+      }
+      
       setFormData(initialFormData);
     }
     fetchPreviousSubmissions();
-  }, [toolId]);
+  }, [toolId, targetedRegion]);
 
   const fetchPreviousSubmissions = async () => {
     if (!projectId || !toolId || !user) return;
@@ -255,6 +278,11 @@ const Tool = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Save targeted region to project context if this is a targeted region field
+    if ((field.includes('targetedRegion') || field.includes('judiciaryLocation') || field.includes('targetedLocation')) && value.trim()) {
+      setTargetedRegion(value);
+    }
   };
 
   const loadPreviousSubmission = (submission: any) => {
