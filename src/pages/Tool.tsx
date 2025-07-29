@@ -230,7 +230,7 @@ const Tool = () => {
       setFormData(initialFormData);
     }
     fetchPreviousSubmissions();
-  }, [toolId, targetedRegion, businessModel, businessType, websiteName]);
+  }, [toolId, targetedRegion, businessModel, businessType, websiteName, currentTool]);
 
   const fetchPreviousSubmissions = async () => {
     if (!projectId || !toolId || !user) return;
@@ -509,7 +509,10 @@ const Tool = () => {
         );
       case "select":
         return (
-          <Select onValueChange={(value) => handleInputChange(field.id, value)}>
+          <Select 
+            value={formData[field.id] || ""} 
+            onValueChange={(value) => handleInputChange(field.id, value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder={field.placeholder || `Select ${field.label}`} />
             </SelectTrigger>
