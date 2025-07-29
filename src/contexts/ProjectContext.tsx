@@ -3,8 +3,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 interface ProjectContextType {
   projectId: string | null;
   targetedRegion: string | null;
+  businessModel: string | null;
+  businessType: string | null;
+  websiteName: string | null;
   setProjectId: (id: string | null) => void;
   setTargetedRegion: (region: string) => void;
+  setBusinessModel: (model: string) => void;
+  setBusinessType: (type: string) => void;
+  setWebsiteName: (name: string) => void;
   clearProjectData: () => void;
 }
 
@@ -21,14 +27,22 @@ export const useProject = () => {
 export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [targetedRegion, setTargetedRegionState] = useState<string | null>(null);
+  const [businessModel, setBusinessModelState] = useState<string | null>(null);
+  const [businessType, setBusinessTypeState] = useState<string | null>(null);
+  const [websiteName, setWebsiteNameState] = useState<string | null>(null);
 
-  // Load targeted region from localStorage when project changes
+  // Load project data from localStorage when project changes
   useEffect(() => {
     if (projectId) {
-      const stored = localStorage.getItem(`project_${projectId}_targetedRegion`);
-      if (stored) {
-        setTargetedRegionState(stored);
-      }
+      const storedRegion = localStorage.getItem(`project_${projectId}_targetedRegion`);
+      const storedModel = localStorage.getItem(`project_${projectId}_businessModel`);
+      const storedType = localStorage.getItem(`project_${projectId}_businessType`);
+      const storedName = localStorage.getItem(`project_${projectId}_websiteName`);
+      
+      if (storedRegion) setTargetedRegionState(storedRegion);
+      if (storedModel) setBusinessModelState(storedModel);
+      if (storedType) setBusinessTypeState(storedType);
+      if (storedName) setWebsiteNameState(storedName);
     }
   }, [projectId]);
 
@@ -39,16 +53,46 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const setBusinessModel = (model: string) => {
+    setBusinessModelState(model);
+    if (projectId) {
+      localStorage.setItem(`project_${projectId}_businessModel`, model);
+    }
+  };
+
+  const setBusinessType = (type: string) => {
+    setBusinessTypeState(type);
+    if (projectId) {
+      localStorage.setItem(`project_${projectId}_businessType`, type);
+    }
+  };
+
+  const setWebsiteName = (name: string) => {
+    setWebsiteNameState(name);
+    if (projectId) {
+      localStorage.setItem(`project_${projectId}_websiteName`, name);
+    }
+  };
+
   const clearProjectData = () => {
     setProjectId(null);
     setTargetedRegionState(null);
+    setBusinessModelState(null);
+    setBusinessTypeState(null);
+    setWebsiteNameState(null);
   };
 
   const value = {
     projectId,
     targetedRegion,
+    businessModel,
+    businessType,
+    websiteName,
     setProjectId,
     setTargetedRegion,
+    setBusinessModel,
+    setBusinessType,
+    setWebsiteName,
     clearProjectData,
   };
 

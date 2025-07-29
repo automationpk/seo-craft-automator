@@ -19,7 +19,18 @@ const Tool = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { setProjectId, targetedRegion, setTargetedRegion } = useProject();
+  const { 
+    projectId: contextProjectId, 
+    targetedRegion, 
+    businessModel, 
+    businessType, 
+    websiteName,
+    setProjectId, 
+    setTargetedRegion,
+    setBusinessModel,
+    setBusinessType,
+    setWebsiteName
+  } = useProject();
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResults, setShowResults] = useState(false);
@@ -182,7 +193,7 @@ const Tool = () => {
         initialFormData[field.id] = "";
       });
       
-      // Auto-populate targeted region fields if available
+      // Auto-populate fields from project context if available
       if (targetedRegion) {
         const targetedRegionFields = currentTool.fields.filter(field => 
           field.id.includes('targetedRegion') || 
@@ -194,11 +205,32 @@ const Tool = () => {
           initialFormData[field.id] = targetedRegion;
         });
       }
+
+      if (businessModel) {
+        const businessModelField = currentTool.fields.find(field => field.id === 'businessModel');
+        if (businessModelField) {
+          initialFormData['businessModel'] = businessModel;
+        }
+      }
+
+      if (businessType) {
+        const businessTypeField = currentTool.fields.find(field => field.id === 'businessType');
+        if (businessTypeField) {
+          initialFormData['businessType'] = businessType;
+        }
+      }
+
+      if (websiteName) {
+        const websiteNameField = currentTool.fields.find(field => field.id === 'websiteName');
+        if (websiteNameField) {
+          initialFormData['websiteName'] = websiteName;
+        }
+      }
       
       setFormData(initialFormData);
     }
     fetchPreviousSubmissions();
-  }, [toolId, targetedRegion]);
+  }, [toolId, targetedRegion, businessModel, businessType, websiteName]);
 
   const fetchPreviousSubmissions = async () => {
     if (!projectId || !toolId || !user) return;
@@ -277,11 +309,20 @@ const Tool = () => {
   }, [toolSubmissionId, isProcessing, currentTool]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Save targeted region to project context if this is a targeted region field
-    if ((field.includes('targetedRegion') || field.includes('judiciaryLocation') || field.includes('targetedLocation')) && value.trim()) {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    // Auto-save fields to project context
+    if (field === 'targetedRegion' || field === 'judiciaryLocation' || field === 'targetedLocation') {
       setTargetedRegion(value);
+    } else if (field === 'businessModel') {
+      setBusinessModel(value);
+    } else if (field === 'businessType') {
+      setBusinessType(value);
+    } else if (field === 'websiteName') {
+      setWebsiteName(value);
     }
   };
 
