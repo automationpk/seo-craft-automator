@@ -221,10 +221,17 @@ const Tool = () => {
       }
 
       if (websiteName) {
-        const websiteNameField = currentTool.fields.find(field => field.id === 'websiteName');
-        if (websiteNameField) {
-          initialFormData['websiteName'] = websiteName;
-        }
+        // Auto-populate all website-related fields
+        const websiteFields = currentTool.fields.filter(field => 
+          field.id === 'websiteName' || 
+          field.id === 'website' || 
+          field.id === 'businessWebsite' || 
+          field.id === 'websiteUrl'
+        );
+        
+        websiteFields.forEach(field => {
+          initialFormData[field.id] = websiteName;
+        });
       }
       
       setFormData(initialFormData);
@@ -321,7 +328,7 @@ const Tool = () => {
       setBusinessModel(value);
     } else if (field === 'businessType') {
       setBusinessType(value);
-    } else if (field === 'websiteName') {
+    } else if (field === 'websiteName' || field === 'website' || field === 'businessWebsite' || field === 'websiteUrl') {
       setWebsiteName(value);
     }
   };
