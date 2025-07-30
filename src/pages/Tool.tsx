@@ -192,73 +192,52 @@ const Tool = () => {
       currentTool.fields.forEach(field => {
         initialFormData[field.id] = "";
       });
+
+      // Auto-populate fields from project context if available (only on initial load)
+      if (targetedRegion) {
+        const targetedRegionFields = currentTool.fields.filter(field => 
+          field.id.includes('targetedRegion') || 
+          field.id.includes('judiciaryLocation') || 
+          field.id.includes('targetedLocation')
+        );
+        
+        targetedRegionFields.forEach(field => {
+          initialFormData[field.id] = targetedRegion;
+        });
+      }
+
+      if (businessModel) {
+        const businessModelField = currentTool.fields.find(field => field.id === 'businessModel');
+        if (businessModelField) {
+          initialFormData['businessModel'] = businessModel;
+        }
+      }
+
+      if (businessType) {
+        const businessTypeField = currentTool.fields.find(field => field.id === 'businessType');
+        if (businessTypeField) {
+          initialFormData['businessType'] = businessType;
+        }
+      }
+
+      if (websiteName) {
+        // Auto-populate all website-related fields
+        const websiteFields = currentTool.fields.filter(field => 
+          field.id === 'websiteName' || 
+          field.id === 'website' || 
+          field.id === 'businessWebsite' || 
+          field.id === 'websiteUrl'
+        );
+        
+        websiteFields.forEach(field => {
+          initialFormData[field.id] = websiteName;
+        });
+      }
+      
       setFormData(initialFormData);
     }
     fetchPreviousSubmissions();
   }, [toolId, currentTool]);
-
-  // Separate effect for auto-populating from context (only when form is empty)
-  useEffect(() => {
-    if (currentTool) {
-      setFormData(prev => {
-        const updatedData = { ...prev };
-        let hasChanges = false;
-
-        // Auto-populate targeted region fields if available and field is empty
-        if (targetedRegion) {
-          const targetedRegionFields = currentTool.fields.filter(field => 
-            field.id.includes('targetedRegion') || 
-            field.id.includes('judiciaryLocation') || 
-            field.id.includes('targetedLocation')
-          );
-          
-          targetedRegionFields.forEach(field => {
-            if (!updatedData[field.id] || updatedData[field.id] === "") {
-              updatedData[field.id] = targetedRegion;
-              hasChanges = true;
-            }
-          });
-        }
-
-        // Auto-populate business model if available and field is empty
-        if (businessModel) {
-          const businessModelField = currentTool.fields.find(field => field.id === 'businessModel');
-          if (businessModelField && (!updatedData['businessModel'] || updatedData['businessModel'] === "")) {
-            updatedData['businessModel'] = businessModel;
-            hasChanges = true;
-          }
-        }
-
-        // Auto-populate business type if available and field is empty
-        if (businessType) {
-          const businessTypeField = currentTool.fields.find(field => field.id === 'businessType');
-          if (businessTypeField && (!updatedData['businessType'] || updatedData['businessType'] === "")) {
-            updatedData['businessType'] = businessType;
-            hasChanges = true;
-          }
-        }
-
-        // Auto-populate website fields if available and field is empty
-        if (websiteName) {
-          const websiteFields = currentTool.fields.filter(field => 
-            field.id === 'websiteName' || 
-            field.id === 'website' || 
-            field.id === 'businessWebsite' || 
-            field.id === 'websiteUrl'
-          );
-          
-          websiteFields.forEach(field => {
-            if (!updatedData[field.id] || updatedData[field.id] === "") {
-              updatedData[field.id] = websiteName;
-              hasChanges = true;
-            }
-          });
-        }
-
-        return hasChanges ? updatedData : prev;
-      });
-    }
-  }, [targetedRegion, businessModel, businessType, websiteName, currentTool]);
 
   const fetchPreviousSubmissions = async () => {
     if (!projectId || !toolId || !user) return;
