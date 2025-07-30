@@ -275,15 +275,10 @@ const Tool = () => {
   }, [toolSubmissionId, isProcessing, currentTool]);
 
   const handleInputChange = (field: string, value: string) => {
-    console.log('handleInputChange called:', field, value);
-    setFormData(prev => {
-      const newData = {
-        ...prev,
-        [field]: value
-      };
-      console.log('Setting form data:', newData);
-      return newData;
-    });
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
 
     // Auto-save fields to project context
     if (field === 'targetedRegion' || field === 'judiciaryLocation' || field === 'targetedLocation') {
@@ -456,13 +451,16 @@ const Tool = () => {
   };
 
   const renderFormField = (field: any) => {
+    // Ensure we always have a string value (never undefined)
+    const fieldValue = formData[field.id] ?? "";
+    
     switch (field.type) {
       case "input":
         return (
           <Input
             id={field.id}
             placeholder={field.placeholder}
-            value={formData[field.id] || ""}
+            value={fieldValue}
             onChange={(e) => handleInputChange(field.id, e.target.value)}
             required={field.required}
           />
@@ -472,7 +470,7 @@ const Tool = () => {
           <Textarea
             id={field.id}
             placeholder={field.placeholder}
-            value={formData[field.id] || ""}
+            value={fieldValue}
             onChange={(e) => handleInputChange(field.id, e.target.value)}
             required={field.required}
             rows={3}
@@ -481,7 +479,7 @@ const Tool = () => {
       case "select":
         return (
           <Select 
-            value={formData[field.id] || ""} 
+            value={fieldValue}
             onValueChange={(value) => handleInputChange(field.id, value)}
           >
             <SelectTrigger>
