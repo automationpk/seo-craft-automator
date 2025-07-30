@@ -192,19 +192,6 @@ const Tool = () => {
       currentTool.fields.forEach(field => {
         initialFormData[field.id] = "";
       });
-
-      // Only auto-populate targeted region fields if available
-      if (targetedRegion) {
-        const targetedRegionFields = currentTool.fields.filter(field => 
-          field.id.includes('targetedRegion') || 
-          field.id.includes('judiciaryLocation') || 
-          field.id.includes('targetedLocation')
-        );
-        
-        targetedRegionFields.forEach(field => {
-          initialFormData[field.id] = targetedRegion;
-        });
-      }
       
       setFormData(initialFormData);
     }
