@@ -275,10 +275,15 @@ const Tool = () => {
   }, [toolSubmissionId, isProcessing, currentTool]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    console.log('handleInputChange called:', field, value);
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value
+      };
+      console.log('Setting form data:', newData);
+      return newData;
+    });
 
     // Auto-save fields to project context
     if (field === 'targetedRegion' || field === 'judiciaryLocation' || field === 'targetedLocation') {
