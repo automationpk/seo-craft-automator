@@ -193,7 +193,7 @@ const Tool = () => {
         initialFormData[field.id] = "";
       });
 
-      // Auto-populate fields from project context if available (only on initial load)
+      // Only auto-populate targeted region fields if available
       if (targetedRegion) {
         const targetedRegionFields = currentTool.fields.filter(field => 
           field.id.includes('targetedRegion') || 
@@ -203,34 +203,6 @@ const Tool = () => {
         
         targetedRegionFields.forEach(field => {
           initialFormData[field.id] = targetedRegion;
-        });
-      }
-
-      if (businessModel) {
-        const businessModelField = currentTool.fields.find(field => field.id === 'businessModel');
-        if (businessModelField) {
-          initialFormData['businessModel'] = businessModel;
-        }
-      }
-
-      if (businessType) {
-        const businessTypeField = currentTool.fields.find(field => field.id === 'businessType');
-        if (businessTypeField) {
-          initialFormData['businessType'] = businessType;
-        }
-      }
-
-      if (websiteName) {
-        // Auto-populate all website-related fields
-        const websiteFields = currentTool.fields.filter(field => 
-          field.id === 'websiteName' || 
-          field.id === 'website' || 
-          field.id === 'businessWebsite' || 
-          field.id === 'websiteUrl'
-        );
-        
-        websiteFields.forEach(field => {
-          initialFormData[field.id] = websiteName;
         });
       }
       
