@@ -199,7 +199,7 @@ const Tool = () => {
 
   // Separate effect for auto-populating from context (only when form is empty)
   useEffect(() => {
-    if (currentTool && formData) {
+    if (currentTool) {
       setFormData(prev => {
         const updatedData = { ...prev };
         let hasChanges = false;
@@ -258,7 +258,7 @@ const Tool = () => {
         return hasChanges ? updatedData : prev;
       });
     }
-  }, [targetedRegion, businessModel, businessType, websiteName, currentTool, formData]);
+  }, [targetedRegion, businessModel, businessType, websiteName, currentTool]);
 
   const fetchPreviousSubmissions = async () => {
     if (!projectId || !toolId || !user) return;
