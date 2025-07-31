@@ -14,6 +14,140 @@ import { useProject } from "@/contexts/ProjectContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 
+// Move toolsConfig outside component to prevent recreation on every render
+const toolsConfig = {
+  "before-after-generator": {
+    title: "Before-After Article Generator",
+    description: "Generate weekly SEO blog content based on product/service",
+    icon: <FileText className="h-6 w-6 text-blue-600" />,
+    fields: [
+      { id: "businessModel", label: "Business Model", type: "textarea", placeholder: "Describe your business model", required: true },
+      { id: "productService", label: "Product/Service", type: "textarea", placeholder: "Describe your product or service", required: true },
+      { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
+      { id: "businessType", label: "B2B or B2C", type: "select", options: [
+        { value: "b2b", label: "B2B (Business to Business)" },
+        { value: "b2c", label: "B2C (Business to Consumer)" }
+      ], required: true },
+      { id: "targetedAudience", label: "Targeted Audience", type: "textarea", placeholder: "Describe your target audience in detail", required: true },
+      { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
+      { id: "websiteName", label: "Website Name", type: "input", placeholder: "Your website name", required: true }
+    ],
+    resultTitle: "Before-After Article Generated Successfully!",
+    resultDescription: "Your before-after comparison article is ready for download",
+    resultPreview: "Before vs After: How {websiteName} Transformed {targetedAudience}"
+  },
+  "top-10-generator": {
+    title: "TOP 10 Article Generator",
+    description: "Create listicle articles for increasing website traffic",
+    icon: <TrendingUp className="h-6 w-6 text-blue-600" />,
+    fields: [
+      { id: "businessModel", label: "Business Model", type: "textarea", placeholder: "Describe your business model", required: true },
+      { id: "productService", label: "Product/Service", type: "textarea", placeholder: "Describe your product or service", required: true },
+      { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
+      { id: "businessType", label: "B2B or B2C", type: "select", options: [
+        { value: "b2b", label: "B2B (Business to Business)" },
+        { value: "b2c", label: "B2C (Business to Consumer)" }
+      ], required: true },
+      { id: "targetedAudience", label: "Targeted Audience", type: "textarea", placeholder: "Describe your target audience in detail", required: true },
+      { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
+      { id: "websiteName", label: "Website Name", type: "input", placeholder: "Your website name", required: true }
+    ],
+    resultTitle: "TOP 10 Article Generated Successfully!",
+    resultDescription: "Your listicle article is ready for download",
+    resultPreview: "TOP 10 {productService} for {targetedAudience} in {targetedRegion}"
+  },
+  "page-optimizer": {
+    title: "Page on Page Optimizer",
+    description: "Create landing page content like title, headers, and meta",
+    icon: <Search className="h-6 w-6 text-blue-600" />,
+    fields: [
+      { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
+      { id: "searchVolume", label: "Search Volume", type: "input", placeholder: "Monthly search volume for main keyword", required: true },
+      { id: "userIntentions", label: "User Intentions", type: "textarea", placeholder: "Describe what users are looking for when searching", required: true },
+      { id: "landingPageUrl", label: "Landing Page URL", type: "input", placeholder: "https://example.com/landing-page", required: true },
+      { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true }
+    ],
+    resultTitle: "Page Optimization Complete!",
+    resultDescription: "Your optimized page elements are ready",
+    resultPreview: "Optimized content for {landingPageUrl} targeting '{keywords}' in {targetedRegion}"
+  },
+  "privacy-policy-generator": {
+    title: "Privacy Policy Generator",
+    description: "Generate custom privacy policy content",
+    icon: <Shield className="h-6 w-6 text-blue-600" />,
+    fields: [
+      { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
+      { id: "businessType", label: "Business Type", type: "select", options: [
+        { value: "ecommerce", label: "E-commerce" },
+        { value: "saas", label: "SaaS/Software" },
+        { value: "blog", label: "Blog/Content Site" },
+        { value: "service", label: "Service Business" },
+        { value: "nonprofit", label: "Non-profit" },
+        { value: "other", label: "Other" }
+      ], required: true },
+      { id: "website", label: "Website", type: "input", placeholder: "https://yourwebsite.com", required: true },
+      { id: "servicesOffered", label: "Services Offered", type: "textarea", placeholder: "Describe the services you offer", required: true },
+      { id: "judiciaryLocation", label: "Targeted Region", type: "input", placeholder: "e.g., United States, European Union, United Kingdom, Canada", required: true }
+    ],
+    resultTitle: "Privacy Policy Generated Successfully!",
+    resultDescription: "Your custom privacy policy is ready for download",
+    resultPreview: "Complete privacy policy for {businessName} compliant with {judiciaryLocation} regulations"
+  },
+  "technical-seo-analyzer": {
+    title: "Technical SEO Analyzer",
+    description: "Analyze on-site SEO factors",
+    icon: <Bot className="h-6 w-6 text-blue-600" />,
+    fields: [
+      { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
+      { id: "businessAddress", label: "Business Address", type: "textarea", placeholder: "Your business address", required: true },
+      { id: "businessPhone", label: "Business Phone Number", type: "input", placeholder: "Your business phone number", required: true },
+      { id: "businessWebsite", label: "Business Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
+      { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
+      { id: "relevantKeywords", label: "Relevant Keywords", type: "textarea", placeholder: "Keywords relevant to your business", required: true },
+      { id: "otherDomains", label: "Other Domains", type: "textarea", placeholder: "Other domains you own (optional)", required: false },
+      { id: "imageUrl", label: "Image URL", type: "input", placeholder: "URL of your business logo/image (optional)", required: false },
+      { id: "title", label: "Title", type: "input", placeholder: "Current page title", required: false },
+      { id: "description", label: "Description", type: "textarea", placeholder: "Current meta description", required: false },
+      { id: "currentUrl", label: "Current URL", type: "input", placeholder: "Current page URL", required: false },
+      { id: "changeUrl", label: "Change URL", type: "input", placeholder: "New URL if changing (optional)", required: false }
+    ],
+    resultTitle: "Technical SEO Analysis Complete!",
+    resultDescription: "Your comprehensive SEO report is ready",
+    resultPreview: "Technical SEO analysis and recommendations for {businessName} in {targetedRegion}"
+  },
+  "landing-page-optimizer": {
+    title: "Landing Page Optimization Tool",
+    description: "Optimize SEO for key landing pages",
+    icon: <Search className="h-6 w-6 text-blue-600" />,
+    fields: [
+      { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
+      { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
+      { id: "website", label: "Website", type: "input", placeholder: "https://yourwebsite.com", required: true },
+      { id: "landingPage", label: "Landing Page", type: "input", placeholder: "https://yourwebsite.com/landing-page", required: true },
+      { id: "targetedKeywords", label: "Targeted Keywords", type: "textarea", placeholder: "Keywords to optimize for (comma-separated)", required: true }
+    ],
+    resultTitle: "Landing Page Optimization Complete!",
+    resultDescription: "Your optimized landing page content is ready",
+    resultPreview: "Optimized content for {landingPage} targeting {targetedKeywords}"
+  },
+  "link-building-tracker": {
+    title: "Link Building Tracker",
+    description: "Track link-building campaigns",
+    icon: <Link className="h-6 w-6 text-blue-600" />,
+    fields: [
+      { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
+      { id: "targetedLocation", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
+      { id: "websiteUrl", label: "Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
+      { id: "category", label: "Category", type: "input", placeholder: "Your business category", required: true },
+      { id: "goal", label: "Goal", type: "textarea", placeholder: "Describe your link building goals", required: true },
+      { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true }
+    ],
+    resultTitle: "Link Building Report Generated!",
+    resultDescription: "Your link building opportunities are ready",
+    resultPreview: "Link building opportunities and tracking for {businessName} in {targetedLocation}"
+  }
+};
+
 const Tool = () => {
   const { id: projectId, toolId } = useParams();
   const navigate = useNavigate();
@@ -36,30 +170,7 @@ const Tool = () => {
   const [showResults, setShowResults] = useState(false);
   const [toolSubmissionId, setToolSubmissionId] = useState<string | null>(null);
   const [toolSubmission, setToolSubmission] = useState<any>(null);
-  const [formData, setFormData] = useState<Record<string, string>>({
-    businessModel: "",
-    productService: "",
-    targetedRegion: "",
-    businessType: "",
-    targetedAudience: "",
-    keywords: "",
-    websiteName: "",
-    searchVolume: "",
-    userIntentions: "",
-    landingPageUrl: "",
-    judiciaryLocation: "",
-    lawyerType: "",
-    legalPracticeAreas: "",
-    targetedLocation: "",
-    businessWebsite: "",
-    website: "",
-    websiteUrl: "",
-    caseStudyType: "",
-    caseStudyTopic: "",
-    successMetrics: "",
-    challenges: "",
-    solutions: ""
-  });
+  const [formData, setFormData] = useState<Record<string, string>>({});
   const [isFormReady, setIsFormReady] = useState(false);
   const [feedback, setFeedback] = useState({
     rating: 0,
@@ -67,139 +178,7 @@ const Tool = () => {
   });
   const [previousSubmissions, setPreviousSubmissions] = useState<any[]>([]);
   const [expandedHistory, setExpandedHistory] = useState(false);
-
-  const toolsConfig = {
-    "before-after-generator": {
-      title: "Before-After Article Generator",
-      description: "Generate weekly SEO blog content based on product/service",
-      icon: <FileText className="h-6 w-6 text-blue-600" />,
-      fields: [
-        { id: "businessModel", label: "Business Model", type: "textarea", placeholder: "Describe your business model", required: true },
-        { id: "productService", label: "Product/Service", type: "textarea", placeholder: "Describe your product or service", required: true },
-        { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
-        { id: "businessType", label: "B2B or B2C", type: "select", options: [
-          { value: "b2b", label: "B2B (Business to Business)" },
-          { value: "b2c", label: "B2C (Business to Consumer)" }
-        ], required: true },
-        { id: "targetedAudience", label: "Targeted Audience", type: "textarea", placeholder: "Describe your target audience in detail", required: true },
-        { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
-        { id: "websiteName", label: "Website Name", type: "input", placeholder: "Your website name", required: true }
-      ],
-      resultTitle: "Before-After Article Generated Successfully!",
-      resultDescription: "Your before-after comparison article is ready for download",
-      resultPreview: "Before vs After: How {websiteName} Transformed {targetedAudience}"
-    },
-    "top-10-generator": {
-      title: "TOP 10 Article Generator",
-      description: "Create listicle articles for increasing website traffic",
-      icon: <TrendingUp className="h-6 w-6 text-blue-600" />,
-      fields: [
-        { id: "businessModel", label: "Business Model", type: "textarea", placeholder: "Describe your business model", required: true },
-        { id: "productService", label: "Product/Service", type: "textarea", placeholder: "Describe your product or service", required: true },
-        { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
-        { id: "businessType", label: "B2B or B2C", type: "select", options: [
-          { value: "b2b", label: "B2B (Business to Business)" },
-          { value: "b2c", label: "B2C (Business to Consumer)" }
-        ], required: true },
-        { id: "targetedAudience", label: "Targeted Audience", type: "textarea", placeholder: "Describe your target audience in detail", required: true },
-        { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
-        { id: "websiteName", label: "Website Name", type: "input", placeholder: "Your website name", required: true }
-      ],
-      resultTitle: "TOP 10 Article Generated Successfully!",
-      resultDescription: "Your listicle article is ready for download",
-      resultPreview: "TOP 10 {productService} for {targetedAudience} in {targetedRegion}"
-    },
-    "page-optimizer": {
-      title: "Page on Page Optimizer",
-      description: "Create landing page content like title, headers, and meta",
-      icon: <Search className="h-6 w-6 text-blue-600" />,
-      fields: [
-        { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true },
-        { id: "searchVolume", label: "Search Volume", type: "input", placeholder: "Monthly search volume for main keyword", required: true },
-        { id: "userIntentions", label: "User Intentions", type: "textarea", placeholder: "Describe what users are looking for when searching", required: true },
-        { id: "landingPageUrl", label: "Landing Page URL", type: "input", placeholder: "https://example.com/landing-page", required: true },
-        { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true }
-      ],
-      resultTitle: "Page Optimization Complete!",
-      resultDescription: "Your optimized page elements are ready",
-      resultPreview: "Optimized content for {landingPageUrl} targeting '{keywords}' in {targetedRegion}"
-    },
-    "privacy-policy-generator": {
-      title: "Privacy Policy Generator",
-      description: "Generate custom privacy policy content",
-      icon: <Shield className="h-6 w-6 text-blue-600" />,
-      fields: [
-        { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
-        { id: "businessType", label: "Business Type", type: "select", options: [
-          { value: "ecommerce", label: "E-commerce" },
-          { value: "saas", label: "SaaS/Software" },
-          { value: "blog", label: "Blog/Content Site" },
-          { value: "service", label: "Service Business" },
-          { value: "nonprofit", label: "Non-profit" },
-          { value: "other", label: "Other" }
-        ], required: true },
-        { id: "website", label: "Website", type: "input", placeholder: "https://yourwebsite.com", required: true },
-        { id: "servicesOffered", label: "Services Offered", type: "textarea", placeholder: "Describe the services you offer", required: true },
-        { id: "judiciaryLocation", label: "Targeted Region", type: "input", placeholder: "e.g., United States, European Union, United Kingdom, Canada", required: true }
-      ],
-      resultTitle: "Privacy Policy Generated Successfully!",
-      resultDescription: "Your custom privacy policy is ready for download",
-      resultPreview: "Complete privacy policy for {businessName} compliant with {judiciaryLocation} regulations"
-    },
-    "technical-seo-analyzer": {
-      title: "Technical SEO Analyzer",
-      description: "Analyze on-site SEO factors",
-      icon: <Bot className="h-6 w-6 text-blue-600" />,
-      fields: [
-        { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
-        { id: "businessAddress", label: "Business Address", type: "textarea", placeholder: "Your business address", required: true },
-        { id: "businessPhone", label: "Business Phone Number", type: "input", placeholder: "Your business phone number", required: true },
-        { id: "businessWebsite", label: "Business Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
-        { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
-        { id: "relevantKeywords", label: "Relevant Keywords", type: "textarea", placeholder: "Keywords relevant to your business", required: true },
-        { id: "otherDomains", label: "Other Domains", type: "textarea", placeholder: "Other domains you own (optional)", required: false },
-        { id: "imageUrl", label: "Image URL", type: "input", placeholder: "URL of your business logo/image (optional)", required: false },
-        { id: "title", label: "Title", type: "input", placeholder: "Current page title", required: false },
-        { id: "description", label: "Description", type: "textarea", placeholder: "Current meta description", required: false },
-        { id: "currentUrl", label: "Current URL", type: "input", placeholder: "Current page URL", required: false },
-        { id: "changeUrl", label: "Change URL", type: "input", placeholder: "New URL if changing (optional)", required: false }
-      ],
-      resultTitle: "Technical SEO Analysis Complete!",
-      resultDescription: "Your comprehensive SEO report is ready",
-      resultPreview: "Technical SEO analysis and recommendations for {businessName} in {targetedRegion}"
-    },
-    "landing-page-optimizer": {
-      title: "Landing Page Optimization Tool",
-      description: "Optimize SEO for key landing pages",
-      icon: <Search className="h-6 w-6 text-blue-600" />,
-      fields: [
-        { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
-        { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
-        { id: "website", label: "Website", type: "input", placeholder: "https://yourwebsite.com", required: true },
-        { id: "landingPage", label: "Landing Page", type: "input", placeholder: "https://yourwebsite.com/landing-page", required: true },
-        { id: "targetedKeywords", label: "Targeted Keywords", type: "textarea", placeholder: "Keywords to optimize for (comma-separated)", required: true }
-      ],
-      resultTitle: "Landing Page Optimization Complete!",
-      resultDescription: "Your optimized landing page content is ready",
-      resultPreview: "Optimized content for {landingPage} targeting {targetedKeywords}"
-    },
-    "link-building-tracker": {
-      title: "Link Building Tracker",
-      description: "Track link-building campaigns",
-      icon: <Link className="h-6 w-6 text-blue-600" />,
-      fields: [
-        { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
-        { id: "targetedLocation", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
-        { id: "websiteUrl", label: "Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
-        { id: "category", label: "Category", type: "input", placeholder: "Your business category", required: true },
-        { id: "goal", label: "Goal", type: "textarea", placeholder: "Describe your link building goals", required: true },
-        { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true }
-      ],
-      resultTitle: "Link Building Report Generated!",
-      resultDescription: "Your link building opportunities are ready",
-      resultPreview: "Link building opportunities and tracking for {businessName} in {targetedLocation}"
-    }
-  };
+  const [formInitialized, setFormInitialized] = useState(false);
 
   const currentTool = toolsConfig[toolId as keyof typeof toolsConfig];
 
@@ -211,21 +190,24 @@ const Tool = () => {
   }, [projectId, setProjectId]);
 
   useEffect(() => {
-    if (currentTool) {
+    if (currentTool && !formInitialized) {
+      console.log('Initializing form data for tool:', toolId);
       // Initialize form data with empty strings for all fields of current tool
       const initialFormData: Record<string, string> = {};
       currentTool.fields.forEach(field => {
         initialFormData[field.id] = "";
       });
       
-      // Update form data state
+      // Update form data state only once
       setFormData(initialFormData);
       setIsFormReady(true);
-    } else {
+      setFormInitialized(true);
+    } else if (!currentTool) {
       setIsFormReady(false);
+      setFormInitialized(false);
     }
     fetchPreviousSubmissions();
-  }, [toolId, currentTool]);
+  }, [toolId]); // Only depend on toolId, not currentTool
 
   const fetchPreviousSubmissions = async () => {
     if (!projectId || !toolId || !user) return;
@@ -304,6 +286,7 @@ const Tool = () => {
   }, [toolSubmissionId, isProcessing, currentTool]);
 
   const handleInputChange = (field: string, value: string) => {
+    console.log('Input change:', field, value); // Debug log
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -779,25 +762,19 @@ const Tool = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {!isFormReady ? (
-                <div className="flex justify-center items-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                  <span>Loading form...</span>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {currentTool.fields.map((field) => (
-                      <div key={field.id} className={field.type === "textarea" ? "md:col-span-2" : ""}>
-                        <div className="space-y-2">
-                          <Label htmlFor={field.id}>
-                            {field.label} {field.required && <span className="text-red-500">*</span>}
-                          </Label>
-                          {renderFormField(field)}
-                        </div>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  {currentTool.fields.map((field) => (
+                    <div key={field.id} className={field.type === "textarea" ? "md:col-span-2" : ""}>
+                      <div className="space-y-2">
+                        <Label htmlFor={field.id}>
+                          {field.label} {field.required && <span className="text-red-500">*</span>}
+                        </Label>
+                        {renderFormField(field)}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
+                </div>
 
                 <Button 
                   type="submit" 
@@ -814,7 +791,6 @@ const Tool = () => {
                   )}
                 </Button>
               </form>
-              )}
             </CardContent>
           </Card>
         ) : (
