@@ -212,13 +212,17 @@ const Tool = () => {
 
   useEffect(() => {
     if (currentTool) {
+      // Initialize form data with empty strings for all fields of current tool
       const initialFormData: Record<string, string> = {};
       currentTool.fields.forEach(field => {
         initialFormData[field.id] = "";
       });
       
+      // Update form data state
       setFormData(initialFormData);
       setIsFormReady(true);
+    } else {
+      setIsFormReady(false);
     }
     fetchPreviousSubmissions();
   }, [toolId, currentTool]);
