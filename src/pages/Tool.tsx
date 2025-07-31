@@ -599,6 +599,18 @@ const Tool = () => {
     );
   }
 
+  // Don't render anything until formData is properly initialized
+  if (!isFormReady) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="flex justify-center items-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <span>Loading tool...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -819,7 +831,7 @@ const Tool = () => {
                   <h3 className="font-semibold mb-2">Content Preview:</h3>
                   <p className="text-gray-700 text-sm mb-4">
                     {currentTool.resultPreview.replace(/\{(\w+)\}/g, (match, key) => {
-                      return formData[key] || match;
+                      return formData?.[key] || match;
                     })}
                   </p>
                   <p className="text-gray-600 text-sm">
