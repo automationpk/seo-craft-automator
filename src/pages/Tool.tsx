@@ -36,7 +36,31 @@ const Tool = () => {
   const [showResults, setShowResults] = useState(false);
   const [toolSubmissionId, setToolSubmissionId] = useState<string | null>(null);
   const [toolSubmission, setToolSubmission] = useState<any>(null);
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Record<string, string>>({
+    businessModel: "",
+    productService: "",
+    targetedRegion: "",
+    businessType: "",
+    targetedAudience: "",
+    keywords: "",
+    websiteName: "",
+    searchVolume: "",
+    userIntentions: "",
+    landingPageUrl: "",
+    judiciaryLocation: "",
+    lawyerType: "",
+    legalPracticeAreas: "",
+    targetedLocation: "",
+    businessWebsite: "",
+    website: "",
+    websiteUrl: "",
+    caseStudyType: "",
+    caseStudyTopic: "",
+    successMetrics: "",
+    challenges: "",
+    solutions: ""
+  });
+  const [isFormReady, setIsFormReady] = useState(false);
   const [feedback, setFeedback] = useState({
     rating: 0,
     comment: ""
@@ -194,6 +218,7 @@ const Tool = () => {
       });
       
       setFormData(initialFormData);
+      setIsFormReady(true);
     }
     fetchPreviousSubmissions();
   }, [toolId, currentTool]);
@@ -738,19 +763,25 @@ const Tool = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  {currentTool.fields.map((field) => (
-                    <div key={field.id} className={field.type === "textarea" ? "md:col-span-2" : ""}>
-                      <div className="space-y-2">
-                        <Label htmlFor={field.id}>
-                          {field.label} {field.required && <span className="text-red-500">*</span>}
-                        </Label>
-                        {renderFormField(field)}
-                      </div>
-                    </div>
-                  ))}
+              {!isFormReady ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>Loading form...</span>
                 </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {currentTool.fields.map((field) => (
+                      <div key={field.id} className={field.type === "textarea" ? "md:col-span-2" : ""}>
+                        <div className="space-y-2">
+                          <Label htmlFor={field.id}>
+                            {field.label} {field.required && <span className="text-red-500">*</span>}
+                          </Label>
+                          {renderFormField(field)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
                 <Button 
                   type="submit" 
@@ -767,6 +798,7 @@ const Tool = () => {
                   )}
                 </Button>
               </form>
+              )}
             </CardContent>
           </Card>
         ) : (
