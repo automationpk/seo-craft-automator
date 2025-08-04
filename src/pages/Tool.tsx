@@ -195,7 +195,16 @@ const Tool = () => {
       // Always reinitialize form data when tool changes (handles field ID updates)
       const initialFormData: Record<string, string> = {};
       currentTool.fields.forEach(field => {
-        initialFormData[field.id] = "";
+        // Auto-prefill from project context if available
+        let defaultValue = "";
+        
+        if (field.id === 'websiteName' || field.id === 'website' || field.id === 'businessWebsite' || field.id === 'websiteUrl') {
+          defaultValue = websiteName || "";
+        } else if (field.id === 'targetedRegion' || field.id === 'judiciaryLocation' || field.id === 'targetedLocation') {
+          defaultValue = targetedRegion || "";
+        }
+        
+        initialFormData[field.id] = defaultValue;
       });
       
       setFormData(initialFormData);
@@ -206,7 +215,7 @@ const Tool = () => {
       setFormInitialized(false);
     }
     fetchPreviousSubmissions();
-  }, [toolId]); // Only depend on toolId, not currentTool
+  }, [toolId, websiteName, targetedRegion]); // Include context values in dependencies
 
   const fetchPreviousSubmissions = async () => {
     if (!projectId || !toolId || !user) return;

@@ -19,10 +19,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface CreateProjectDialogProps {
   onProjectCreated: (project: any) => void;
+  onProjectSetupNeeded?: (projectId: string) => void;
   className?: string;
 }
 
-const CreateProjectDialog = ({ onProjectCreated, className }: CreateProjectDialogProps) => {
+const CreateProjectDialog = ({ onProjectCreated, onProjectSetupNeeded, className }: CreateProjectDialogProps) => {
   const [open, setOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -76,6 +77,11 @@ const CreateProjectDialog = ({ onProjectCreated, className }: CreateProjectDialo
       
       setOpen(false);
       setProjectName("");
+      
+      // Trigger project setup dialog
+      if (onProjectSetupNeeded) {
+        onProjectSetupNeeded(data.id);
+      }
     } catch (error) {
       console.error('Error creating project:', error);
       toast({

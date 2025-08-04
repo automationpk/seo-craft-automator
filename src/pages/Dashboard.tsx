@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import CreateProjectDialog from "@/components/CreateProjectDialog";
+import ProjectSetupDialog from "@/components/ProjectSetupDialog";
 
 interface Project {
   id: string;
@@ -24,6 +25,7 @@ const Dashboard = () => {
   const { signOut, user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [setupProjectId, setSetupProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProjects();
@@ -64,6 +66,14 @@ const Dashboard = () => {
 
   const handleProjectCreated = (newProject: Project) => {
     setProjects([newProject, ...projects]);
+  };
+
+  const handleProjectSetupNeeded = (projectId: string) => {
+    setSetupProjectId(projectId);
+  };
+
+  const handleSetupComplete = () => {
+    setSetupProjectId(null);
   };
 
   const handleLogout = async () => {
@@ -175,6 +185,7 @@ const Dashboard = () => {
           <h2 className="text-2xl font-bold text-gray-900">Your Projects</h2>
           <CreateProjectDialog 
             onProjectCreated={handleProjectCreated}
+            onProjectSetupNeeded={handleProjectSetupNeeded}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           />
         </div>
@@ -189,6 +200,7 @@ const Dashboard = () => {
               </p>
               <CreateProjectDialog 
                 onProjectCreated={handleProjectCreated}
+                onProjectSetupNeeded={handleProjectSetupNeeded}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               />
             </CardContent>
@@ -234,6 +246,15 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      
+      {/* Project Setup Dialog */}
+      {setupProjectId && (
+        <ProjectSetupDialog
+          open={true}
+          onClose={handleSetupComplete}
+          projectId={setupProjectId}
+        />
+      )}
     </div>
   );
 };
