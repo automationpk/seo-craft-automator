@@ -85,7 +85,7 @@ const toolsConfig = {
         { value: "nonprofit", label: "Non-profit" },
         { value: "other", label: "Other" }
       ], required: true },
-      { id: "website", label: "Website", type: "input", placeholder: "https://yourwebsite.com", required: true },
+      { id: "websiteName", label: "Website Name", type: "input", placeholder: "https://yourwebsite.com", required: true },
       { id: "servicesOffered", label: "Services Offered", type: "textarea", placeholder: "Describe the services you offer", required: true },
       { id: "judiciaryLocation", label: "Targeted Region", type: "input", placeholder: "e.g., United States, European Union, United Kingdom, Canada", required: true }
     ],
@@ -101,7 +101,7 @@ const toolsConfig = {
       { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
       { id: "businessAddress", label: "Business Address", type: "textarea", placeholder: "Your business address", required: true },
       { id: "businessPhone", label: "Business Phone Number", type: "input", placeholder: "Your business phone number", required: true },
-      { id: "businessWebsite", label: "Business Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
+      { id: "websiteName", label: "Website Name", type: "input", placeholder: "https://yourwebsite.com", required: true },
       { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
       { id: "relevantKeywords", label: "Relevant Keywords", type: "textarea", placeholder: "Keywords relevant to your business", required: true },
       { id: "otherDomains", label: "Other Domains", type: "textarea", placeholder: "Other domains you own (optional)", required: false },
@@ -122,7 +122,7 @@ const toolsConfig = {
     fields: [
       { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
       { id: "targetedRegion", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
-      { id: "website", label: "Website", type: "input", placeholder: "https://yourwebsite.com", required: true },
+      { id: "websiteName", label: "Website Name", type: "input", placeholder: "https://yourwebsite.com", required: true },
       { id: "landingPage", label: "Landing Page", type: "input", placeholder: "https://yourwebsite.com/landing-page", required: true },
       { id: "targetedKeywords", label: "Targeted Keywords", type: "textarea", placeholder: "Keywords to optimize for (comma-separated)", required: true }
     ],
@@ -137,7 +137,7 @@ const toolsConfig = {
     fields: [
       { id: "businessName", label: "Business Name", type: "input", placeholder: "Your business name", required: true },
       { id: "targetedLocation", label: "Targeted Region", type: "input", placeholder: "e.g., United States, Europe, Global", required: true },
-      { id: "websiteUrl", label: "Website URL", type: "input", placeholder: "https://yourwebsite.com", required: true },
+      { id: "websiteName", label: "Website Name", type: "input", placeholder: "https://yourwebsite.com", required: true },
       { id: "category", label: "Category", type: "input", placeholder: "Your business category", required: true },
       { id: "goal", label: "Goal", type: "textarea", placeholder: "Describe your link building goals", required: true },
       { id: "keywords", label: "Keywords", type: "textarea", placeholder: "Enter your target keywords (comma-separated)", required: true }
