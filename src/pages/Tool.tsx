@@ -190,19 +190,18 @@ const Tool = () => {
   }, [projectId, setProjectId]);
 
   useEffect(() => {
-    if (currentTool && !formInitialized) {
-      console.log('Initializing form data for tool:', toolId);
-      // Initialize form data with empty strings for all fields of current tool
+    if (currentTool) {
+      console.log('Reinitializing form data for tool:', toolId);
+      // Always reinitialize form data when tool changes (handles field ID updates)
       const initialFormData: Record<string, string> = {};
       currentTool.fields.forEach(field => {
         initialFormData[field.id] = "";
       });
       
-      // Update form data state only once
       setFormData(initialFormData);
       setIsFormReady(true);
       setFormInitialized(true);
-    } else if (!currentTool) {
+    } else {
       setIsFormReady(false);
       setFormInitialized(false);
     }
