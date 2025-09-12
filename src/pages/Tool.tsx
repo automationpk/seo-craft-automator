@@ -191,8 +191,8 @@ const Tool = () => {
 
   useEffect(() => {
     if (currentTool) {
-      console.log('Reinitializing form data for tool:', toolId);
-      // Always reinitialize form data when tool changes (handles field ID updates)
+      console.log('Initializing form data for tool:', toolId);
+      // Initialize form data when tool changes (prefill from project context once)
       const initialFormData: Record<string, string> = {};
       currentTool.fields.forEach(field => {
         // Auto-prefill from project context if available
@@ -215,7 +215,8 @@ const Tool = () => {
       setFormInitialized(false);
     }
     fetchPreviousSubmissions();
-  }, [toolId, websiteName, targetedRegion]); // Include context values in dependencies
+    // Important: initialize only when tool changes to avoid wiping user inputs on context updates
+  }, [toolId]);
 
   const fetchPreviousSubmissions = async () => {
     if (!projectId || !toolId || !user) return;
